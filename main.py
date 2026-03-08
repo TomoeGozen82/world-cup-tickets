@@ -12,18 +12,17 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 import db.database as db
 from collector import fixtures, reddit, news_rss, seatgeek
-from analysis.value import score_all_matches, calculate_fee
+from analysis.value import score_all_matches, score_match, calculate_fee
 from config import RESALE_POLL_HOURS
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 
-def _collect_fixtures():
+def _seed_fixtures():
     n = fixtures.collect()
-    if n > 0:
-        score_all_matches()
-    log.info(f"[scheduler] fixtures: {n} matches")
+    score_all_matches()
+    log.info(f"[startup] seeded {n} fixtures")
 
 
 def _collect_news():
@@ -44,7 +43,6 @@ def _collect_resale():
 
 
 def _run_all():
-    _collect_fixtures()
     _collect_news()
     _collect_reddit()
     _collect_resale()
@@ -53,15 +51,15 @@ def _run_all():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     db.init_db()
-    scheduler = BackgroundScheduler(daemon=True)
+    _seed_fixtures()
 
-    scheduler.add_job(_collect_fixtures, trigger="interval", hours=24, id="fixtures", replace_existing=True)
+    scheduler = BackgroundScheduler(daemon=True)
     scheduler.add_job(_collect_news, trigger="interval", hours=4, id="news", replace_existing=True)
     scheduler.add_job(_collect_reddit, trigger="interval", hours=2, id="reddit", replace_existing=True)
     scheduler.add_job(_collect_resale, trigger="interval", hours=RESALE_POLL_HOURS, id="resale", replace_existing=True)
 
     scheduler.start()
-    log.info(f"[scheduler] Started — fixtures/24h, news/4h, reddit/2h, resale/{RESALE_POLL_HOURS}h")
+    log.info(f"[scheduler] Started — news/4h, reddit/2h, resale/{RESALE_POLL_HOURS}h")
 
     # Immediate collection on startup
     import threading
@@ -84,6 +82,9 @@ def get_matches(round: str | None = Query(None), country: str | None = Query(Non
         matches = [m for m in matches if m["round"] == round]
     if country:
         matches = [m for m in matches if m["country"] == country]
+    for m in matches:
+        result = score_match(m, breakdown=True)
+        m["score_breakdown"] = result["factors"]
     return matches
 
 
@@ -100,6 +101,9 @@ def get_reddit(limit: int = Query(50)):
 @app.get("/api/analysis/scores")
 def get_scores():
     matches = [dict(m) for m in db.get_all_matches()]
+    for m in matches:
+        result = score_match(m, breakdown=True)
+        m["score_breakdown"] = result["factors"]
     return sorted(matches, key=lambda m: m["value_score"], reverse=True)
 
 

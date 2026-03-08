@@ -11,7 +11,7 @@ FIFA 2026 World Cup ticket investment tracker.
 - Domain: tickets.duchessnikki.com
 
 ## Data Sources (all zero-config, no API keys)
-- **TheSportsDB** (free API, key="3") — match fixtures, refreshes every 24h
+- **Static fixtures** — all 104 matches hardcoded from FIFA's official schedule, seeded on startup
 - **Vivid Seats** (web scraping, JSON-LD) — resale ticket prices, refreshes every 6h
 - **Reddit JSON API** (no auth) — ticket sentiment from r/WorldCup2026Tickets + r/fifatickets, every 2h
 - **RSS feeds** (ESPN, Guardian, BBC) — World Cup news, every 4h
@@ -22,7 +22,7 @@ main.py              — FastAPI app + APScheduler + API routes
 config.py            — All constants (face values, venue scores, team tiers)
 db/schema.sql        — SQLite schema (matches, news_items, reddit_posts, price_snapshots)
 db/database.py       — CRUD operations
-collector/fixtures.py — TheSportsDB collector
+collector/fixtures.py — Static fixture data (all 104 matches) + seeder
 collector/seatgeek.py — Vivid Seats scraper (file named seatgeek.py for historical reasons)
 collector/news_rss.py — RSS news collector
 collector/reddit.py   — Reddit sentiment collector
@@ -50,13 +50,12 @@ ssh root@187.77.7.89 "docker restart world-cup-tickets"
 ```
 
 ## Current State (March 2026)
-- 15 matches in DB from TheSportsDB (group stage)
-- 13/15 have live resale prices from Vivid Seats
-- Dashboard fully redesigned with score rings, country flags, resale prices
+- All 104 matches seeded from static data (72 group + 32 knockout)
+- 6 team slots TBD pending UEFA/intercontinental playoffs (March 26-31, 2026)
+- Dashboard with score rings, country flags, resale prices, score breakdown tooltips
 - Price snapshots stored for future trend analysis
 
 ## Next Steps
 - Telegram bot for price alerts
 - Price trend charts (data already being collected in price_snapshots table)
-- More matches as TheSportsDB adds knockout stage fixtures
 - Historical price tracking visualization on dashboard

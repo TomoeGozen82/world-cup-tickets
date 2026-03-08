@@ -7,7 +7,7 @@ from config import (
 from db.database import get_all_matches, update_value_score
 
 
-def score_match(match: dict) -> int:
+def score_match(match: dict, breakdown: bool = False) -> int | dict:
     """
     Calculate value score (0-100) for a match.
 
@@ -19,6 +19,8 @@ def score_match(match: dict) -> int:
       - Resale markup: 30% (new)
 
     Without resale data the original weights apply.
+
+    If breakdown=True, returns a dict with total score and per-factor breakdown.
     """
     has_resale = bool(match.get("resale_median"))
 
@@ -30,49 +32,79 @@ def score_match(match: dict) -> int:
 
     # Round significance
     round_name = match.get("round", "Group")
-    round_score = ROUND_SCORES.get(round_name, 30) * w_round
+    round_raw = ROUND_SCORES.get(round_name, 30)
+    round_score = round_raw * w_round
 
     # Venue desirability
     venue = match.get("venue", "")
-    venue_score = VENUE_SCORES.get(venue, 65) * w_venue
+    venue_raw = VENUE_SCORES.get(venue, 65)
+    venue_score = venue_raw * w_venue
 
     # Team popularity
     teams = {match.get("home_team", ""), match.get("away_team", "")}
     teams.discard(None)
     teams.discard("TBD")
-    team_score = 0
+    team_raw = 0
+    team_detail = "Unknown"
     for team in teams:
         if team in POPULAR_TEAMS["tier1"]:
-            team_score = max(team_score, 100)
+            team_raw = max(team_raw, 100)
         elif team in POPULAR_TEAMS["tier2"]:
-            team_score = max(team_score, 70)
+            team_raw = max(team_raw, 70)
         else:
-            team_score = max(team_score, 40)
+            team_raw = max(team_raw, 40)
     if not teams:
-        team_score = 50
-    team_score *= w_team
+        team_raw = 50
+    if team_raw == 100:
+        team_detail = "Tier 1"
+    elif team_raw == 70:
+        team_detail = "Tier 2"
+    elif team_raw == 50:
+        team_detail = "TBD"
+    else:
+        team_detail = "Tier 3"
+    team_score = team_raw * w_team
 
     # Country factor
     country = match.get("country", "USA")
     if country == "Mexico":
-        country_score = 0
+        country_raw = 0
     elif country == "Canada":
-        country_score = 80 * w_country
+        country_raw = 80
     else:
-        country_score = 100 * w_country
+        country_raw = 100
+    country_score = country_raw * w_country
 
     # Resale markup factor — how much above face value the market is pricing
-    resale_score = 0
+    resale_raw = 0
+    resale_detail = "No data"
+    markup_pct = 0
     if has_resale:
         face = match.get("face_value_cat3") or 100
         median = match["resale_median"]
         markup_pct = ((median - face) / face) * 100 if face > 0 else 0
-        # Map markup % to 0-100 score: 0% markup=20, 100% markup=60, 200%+=100
-        resale_raw = min(100, max(0, 20 + markup_pct * 0.4))
-        resale_score = resale_raw * w_resale
+        # Map markup % to 0-100 score: 0%=10, 100%=30, 300%=70, 500%+=100
+        resale_raw = min(100, max(0, 10 + markup_pct * 0.18))
+        resale_detail = f"+{int(markup_pct)}%" if markup_pct >= 0 else f"{int(markup_pct)}%"
+    resale_score = resale_raw * w_resale
 
-    total = round_score + venue_score + team_score + country_score + resale_score
-    return min(100, max(0, int(total)))
+    total = min(100, max(0, int(round_score + venue_score + team_score + country_score + resale_score)))
+
+    if not breakdown:
+        return total
+
+    factors = [
+        {"name": "Round", "score": int(round_score), "max": int(w_round * 100), "detail": round_name},
+        {"name": "Venue", "score": int(venue_score), "max": int(w_venue * 100), "detail": venue or "Unknown"},
+        {"name": "Team", "score": int(team_score), "max": int(w_team * 100), "detail": team_detail},
+        {"name": "Country", "score": int(country_score), "max": int(w_country * 100), "detail": country},
+        {"name": "Resale", "score": int(resale_score), "max": int(w_resale * 100), "detail": resale_detail},
+    ]
+    # Remove resale factor if no resale data
+    if not has_resale:
+        factors = [f for f in factors if f["name"] != "Resale"]
+
+    return {"total": total, "factors": factors}
 
 
 def calculate_fee(purchase_price: float, sale_price: float) -> dict:

@@ -26,6 +26,7 @@
 
             /* Round colors */
             --round-group: #3b82f6;
+            --round-r32: #06b6d4;
             --round-r16: #14b8a6;
             --round-qf: #a855f7;
             --round-sf: #f97316;
@@ -272,11 +273,12 @@
         }
         .filter-btn[data-filter="all"].active { background: var(--accent); }
         .filter-btn[data-filter="Group"].active { background: var(--round-group); }
+        .filter-btn[data-filter="Round of 32"].active { background: var(--round-r32); }
         .filter-btn[data-filter="Round of 16"].active { background: var(--round-r16); }
         .filter-btn[data-filter="Quarter-final"].active { background: var(--round-qf); }
         .filter-btn[data-filter="Semi-final"].active { background: var(--round-sf); }
         .filter-btn[data-filter="Final"].active { background: var(--round-final); color: #000; }
-        .filter-btn[data-filter="Third-place"].active { background: var(--round-3rd); }
+        .filter-btn[data-filter="3rd Place"].active { background: var(--round-3rd); }
         .filter-count {
             font-size: 0.65rem;
             opacity: 0.7;
@@ -326,7 +328,7 @@
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 12px;
-            overflow: hidden;
+            overflow: visible;
             transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
             opacity: 0;
             transform: translateY(12px);
@@ -349,6 +351,7 @@
 
         .card-top-border {
             height: 3px;
+            border-radius: 12px 12px 0 0;
         }
         .card-body {
             padding: 1rem 1.1rem;
@@ -399,6 +402,95 @@
             font-family: 'Outfit', sans-serif;
             font-weight: 700;
             font-size: 0.78rem;
+            pointer-events: none;
+        }
+
+        /* Score Tooltip */
+        .score-tooltip {
+            display: none;
+            position: absolute;
+            top: calc(100% + 10px);
+            right: -8px;
+            z-index: 100;
+            background: var(--bg-card);
+            border: 1px solid var(--border-hover);
+            border-radius: 10px;
+            padding: 10px 12px;
+            min-width: 200px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            pointer-events: auto;
+        }
+        .score-tooltip::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            right: 18px;
+            width: 10px;
+            height: 10px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-hover);
+            border-left: 1px solid var(--border-hover);
+            transform: rotate(45deg);
+        }
+        .score-ring-wrap:hover .score-tooltip,
+        .score-ring-wrap.show-tooltip .score-tooltip {
+            display: block;
+        }
+        .score-ring-wrap { cursor: pointer; }
+        .tooltip-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+        .tooltip-factor {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .tooltip-factor:last-child { margin-bottom: 0; }
+        .tooltip-factor-name {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            width: 52px;
+            flex-shrink: 0;
+        }
+        .tooltip-bar-track {
+            flex: 1;
+            height: 5px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .tooltip-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.4s ease;
+        }
+        .tooltip-factor-score {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            width: 32px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .tooltip-factor-detail {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.62rem;
+            color: var(--text-muted);
+            max-width: 70px;
+            text-align: right;
+            flex-shrink: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* Teams */
@@ -917,6 +1009,136 @@
             .main-content { padding: 1rem; }
             .price-row { grid-template-columns: repeat(3, 1fr); gap: 0.35rem; }
         }
+
+        /* ── Price Chart Modal ── */
+        .chart-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .chart-overlay.open { display: flex; }
+        .chart-modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            width: 100%;
+            max-width: 640px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modal-enter 0.25s ease;
+        }
+        @keyframes modal-enter {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .chart-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        .chart-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 6px;
+            transition: color 0.2s, background 0.2s;
+            line-height: 0;
+        }
+        .chart-close:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); }
+        .chart-body {
+            padding: 1.25rem;
+        }
+        .chart-svg-wrap {
+            width: 100%;
+            aspect-ratio: 2.2 / 1;
+            position: relative;
+        }
+        .chart-svg-wrap svg {
+            width: 100%;
+            height: 100%;
+        }
+        .chart-empty {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .chart-legend {
+            display: flex;
+            gap: 1.25rem;
+            justify-content: center;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+        }
+        .chart-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+        }
+        .chart-legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .chart-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+        .chart-stat {
+            text-align: center;
+        }
+        .chart-stat-value {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--gold);
+        }
+        .chart-stat-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-top: 0.15rem;
+        }
+        .btn-chart {
+            padding: 0.5rem 0.85rem;
+            font-size: 0.75rem;
+            color: var(--gold-dim);
+            border: 1px solid rgba(245,197,24,0.2);
+            border-radius: 7px;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-family: inherit;
+            cursor: pointer;
+            background: rgba(245,197,24,0.06);
+        }
+        .btn-chart:hover {
+            border-color: rgba(245,197,24,0.4);
+            color: var(--gold);
+            background: rgba(245,197,24,0.1);
+        }
     </style>
 </head>
 <body>
@@ -993,6 +1215,7 @@
             <div class="filter-bar">
                 <button class="filter-btn active" data-filter="all">All</button>
                 <button class="filter-btn" data-filter="Group">Group</button>
+                <button class="filter-btn" data-filter="Round of 32">R32</button>
                 <button class="filter-btn" data-filter="Round of 16">R16</button>
                 <button class="filter-btn" data-filter="Quarter-final">QF</button>
                 <button class="filter-btn" data-filter="Semi-final">SF</button>
@@ -1083,6 +1306,19 @@
         </div>
     </main>
 
+    <!-- Price Chart Modal -->
+    <div class="chart-overlay" id="chartOverlay" onclick="if(event.target===this)closeChart()">
+        <div class="chart-modal">
+            <div class="chart-header">
+                <span class="chart-title" id="chartTitle">Price History</span>
+                <button class="chart-close" onclick="closeChart()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="chart-body" id="chartBody"></div>
+        </div>
+    </div>
+
     <script>
     // ─── Data & State ───
     let allMatches = [];
@@ -1111,23 +1347,29 @@
         'Bahrain': 'bh', 'Oman': 'om', 'Palestine': 'ps', 'Jordan': 'jo',
         'United Arab Emirates': 'ae', 'Kenya': 'ke', 'Tanzania': 'tz',
         'Trinidad and Tobago': 'tt', 'El Salvador': 'sv', 'Guatemala': 'gt',
-        'Cuba': 'cu', 'Haiti': 'ht', 'Curacao': 'cw', 'Suriname': 'sr',
+        'Cuba': 'cu', 'Haiti': 'ht', 'Curacao': 'cw', 'Curaçao': 'cw', 'Suriname': 'sr',
+        'Cape Verde': 'cv', 'Cabo Verde': 'cv',
+        'Korea Republic': 'kr', 'IR Iran': 'ir', "Côte d'Ivoire": 'ci',
+        'Austria': 'at', 'Albania': 'al', 'Bosnia and Herzegovina': 'ba',
+        'Northern Ireland': 'gb-nir', 'Kosovo': 'xk', 'DR Congo': 'cd',
+        'New Caledonia': 'nc',
     };
 
     const COUNTRY_ISO = { 'USA': 'us', 'Canada': 'ca', 'Mexico': 'mx' };
 
     const ROUND_COLORS = {
         'Group':          { border: '#3b82f6', bg: 'rgba(59,130,246,0.12)', text: '#60a5fa' },
+        'Round of 32':    { border: '#06b6d4', bg: 'rgba(6,182,212,0.12)', text: '#67e8f9' },
         'Round of 16':    { border: '#14b8a6', bg: 'rgba(20,184,166,0.12)', text: '#5eead4' },
         'Quarter-final':  { border: '#a855f7', bg: 'rgba(168,85,247,0.12)', text: '#c084fc' },
         'Semi-final':     { border: '#f97316', bg: 'rgba(249,115,22,0.12)', text: '#fb923c' },
         'Final':          { border: '#f5c518', bg: 'rgba(245,197,24,0.12)', text: '#fbbf24' },
-        'Third-place':    { border: '#6b7280', bg: 'rgba(107,114,128,0.12)', text: '#9ca3af' },
+        '3rd Place':      { border: '#6b7280', bg: 'rgba(107,114,128,0.12)', text: '#9ca3af' },
     };
 
     const ROUND_LABELS = {
-        'Group': 'Group', 'Round of 16': 'R16', 'Quarter-final': 'QF',
-        'Semi-final': 'SF', 'Final': 'Final', 'Third-place': '3rd',
+        'Group': 'Group', 'Round of 32': 'R32', 'Round of 16': 'R16',
+        'Quarter-final': 'QF', 'Semi-final': 'SF', 'Final': 'Final', '3rd Place': '3rd',
     };
 
     // ─── Helpers ───
@@ -1141,7 +1383,15 @@
         return `<img src="${flagUrl(iso, 40)}" alt="${name}" width="${size}" class="team-flag" onerror="this.style.display='none'" loading="lazy">`;
     }
 
-    function scoreRing(score) {
+    const FACTOR_COLORS = {
+        Round: '#3b82f6',
+        Venue: '#a855f7',
+        Team: '#22c55e',
+        Country: '#f97316',
+        Resale: '#f5c518',
+    };
+
+    function scoreRing(score, breakdown) {
         const r = 18, c = 2 * Math.PI * r;
         const pct = Math.min(score, 100) / 100;
         const offset = c * (1 - pct);
@@ -1150,8 +1400,30 @@
         else if (score >= 40) color = '#fbbf24';
         else color = '#f87171';
 
+        let tooltipHtml = '';
+        if (breakdown && breakdown.length) {
+            const rows = breakdown.map(f => {
+                const barPct = f.max > 0 ? Math.round((f.score / f.max) * 100) : 0;
+                const barColor = FACTOR_COLORS[f.name] || '#6b7280';
+                return `
+                    <div class="tooltip-factor">
+                        <span class="tooltip-factor-name">${f.name}</span>
+                        <div class="tooltip-bar-track">
+                            <div class="tooltip-bar-fill" style="width:${barPct}%;background:${barColor}"></div>
+                        </div>
+                        <span class="tooltip-factor-score">${f.score}/${f.max}</span>
+                        <span class="tooltip-factor-detail" title="${f.detail}">${f.detail}</span>
+                    </div>`;
+            }).join('');
+            tooltipHtml = `
+                <div class="score-tooltip">
+                    <div class="tooltip-title">Score Breakdown</div>
+                    ${rows}
+                </div>`;
+        }
+
         return `
-            <div class="score-ring-wrap">
+            <div class="score-ring-wrap" onclick="this.classList.toggle('show-tooltip');event.stopPropagation()">
                 <svg width="44" height="44" viewBox="0 0 44 44">
                     <circle class="score-ring-bg" cx="22" cy="22" r="${r}"/>
                     <circle class="score-ring-fill" cx="22" cy="22" r="${r}"
@@ -1160,6 +1432,7 @@
                         stroke-dashoffset="${offset}"/>
                 </svg>
                 <div class="score-ring-text" style="color:${color}">${score}</div>
+                ${tooltipHtml}
             </div>`;
     }
 
@@ -1245,7 +1518,7 @@
                 <div class="card-body">
                     <div class="card-header">
                         <span class="round-tag" style="background:${rc.bg};color:${rc.text}">${ROUND_LABELS[m.round] || m.round}</span>
-                        ${scoreRing(m.value_score)}
+                        ${scoreRing(m.value_score, m.score_breakdown)}
                     </div>
 
                     <div class="teams-row">
@@ -1290,6 +1563,7 @@
                     <div class="card-actions">
                         <a href="https://www.fifa.com/fifaplus/en/tournaments/mens/worldcup/canadamexicousa2026/tickets"
                            target="_blank" rel="noopener" class="btn-buy">Buy Tickets</a>
+                        ${m.resale_median ? `<button class="btn-chart" onclick="event.stopPropagation();openChart(${m.id},'${(m.home_team||'TBD')} vs ${(m.away_team||'TBD')}')">Chart</button>` : ''}
                         ${m.seatgeek_url ? `<a href="${m.seatgeek_url}" target="_blank" rel="noopener" class="btn-details">Resale</a>` : ''}
                         ${m.external_id ? `<a href="https://www.thesportsdb.com/event/${m.external_id}" target="_blank" rel="noopener" class="btn-details">Details</a>` : ''}
                     </div>
@@ -1529,6 +1803,141 @@
             console.error('Refresh failed:', e);
         }
     }
+
+    // ─── Price Chart ───
+    function closeChart() {
+        document.getElementById('chartOverlay').classList.remove('open');
+    }
+
+    async function openChart(matchId, matchLabel) {
+        document.getElementById('chartTitle').textContent = matchLabel + ' — Price Trend';
+        document.getElementById('chartOverlay').classList.add('open');
+        document.getElementById('chartBody').innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+
+        try {
+            const res = await fetch(`/api/prices/${matchId}?limit=60`);
+            const snapshots = (await res.json()).reverse(); // oldest first
+
+            if (!snapshots.length) {
+                document.getElementById('chartBody').innerHTML = '<div class="chart-empty">No price history yet. Data is collected every 6 hours.</div>';
+                return;
+            }
+
+            // Find match face value for reference line
+            const match = allMatches.find(m => m.id === matchId);
+            const faceValue = match?.face_value_cat3 || 100;
+
+            renderChart(snapshots, faceValue);
+        } catch (e) {
+            document.getElementById('chartBody').innerHTML = '<div class="chart-empty">Failed to load price data.</div>';
+        }
+    }
+
+    function renderChart(snapshots, faceValue) {
+        const W = 580, H = 260, PAD = { top: 20, right: 20, bottom: 35, left: 50 };
+        const plotW = W - PAD.left - PAD.right;
+        const plotH = H - PAD.top - PAD.bottom;
+
+        // Extract series
+        const dates = snapshots.map(s => s.fetched_at);
+        const low = snapshots.map(s => s.lowest_price || 0);
+        const med = snapshots.map(s => s.median_price || 0);
+        const high = snapshots.map(s => s.highest_price || 0);
+
+        const allVals = [...low, ...med, ...high, faceValue].filter(v => v > 0);
+        const minV = Math.floor(Math.min(...allVals) * 0.85);
+        const maxV = Math.ceil(Math.max(...allVals) * 1.1);
+        const rangeV = maxV - minV || 1;
+
+        const xScale = (i) => PAD.left + (i / Math.max(snapshots.length - 1, 1)) * plotW;
+        const yScale = (v) => PAD.top + plotH - ((v - minV) / rangeV) * plotH;
+
+        function polyline(data, color) {
+            const pts = data.map((v, i) => `${xScale(i).toFixed(1)},${yScale(v).toFixed(1)}`).join(' ');
+            return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+        }
+
+        function dots(data, color) {
+            if (data.length > 20) return ''; // too many points for dots
+            return data.map((v, i) =>
+                `<circle cx="${xScale(i).toFixed(1)}" cy="${yScale(v).toFixed(1)}" r="3" fill="${color}" stroke="var(--bg-card)" stroke-width="1.5"/>`
+            ).join('');
+        }
+
+        // Grid lines
+        const gridCount = 5;
+        let gridLines = '';
+        for (let i = 0; i <= gridCount; i++) {
+            const val = minV + (rangeV * i / gridCount);
+            const y = yScale(val);
+            gridLines += `<line x1="${PAD.left}" y1="${y.toFixed(1)}" x2="${W - PAD.right}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+            gridLines += `<text x="${PAD.left - 8}" y="${(y + 4).toFixed(1)}" text-anchor="end" fill="#55556a" font-size="10" font-family="Outfit,sans-serif">$${Math.round(val)}</text>`;
+        }
+
+        // Face value reference line
+        const faceY = yScale(faceValue);
+        const faceLine = `
+            <line x1="${PAD.left}" y1="${faceY.toFixed(1)}" x2="${W - PAD.right}" y2="${faceY.toFixed(1)}" stroke="rgba(233,69,96,0.4)" stroke-width="1" stroke-dasharray="4,3"/>
+            <text x="${W - PAD.right + 2}" y="${(faceY + 3).toFixed(1)}" fill="#e94560" font-size="9" font-family="DM Sans,sans-serif">Face</text>
+        `;
+
+        // Date labels on x-axis
+        let dateLabels = '';
+        const labelCount = Math.min(snapshots.length, 6);
+        for (let i = 0; i < labelCount; i++) {
+            const idx = Math.round(i * (snapshots.length - 1) / Math.max(labelCount - 1, 1));
+            const x = xScale(idx);
+            const dateStr = dates[idx] || '';
+            const short = dateStr.slice(5, 10); // MM-DD
+            dateLabels += `<text x="${x.toFixed(1)}" y="${H - 5}" text-anchor="middle" fill="#55556a" font-size="9" font-family="DM Sans,sans-serif">${short}</text>`;
+        }
+
+        const svg = `
+            <div class="chart-svg-wrap">
+                <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+                    ${gridLines}
+                    ${faceLine}
+                    ${polyline(high, '#a855f7')}
+                    ${polyline(med, '#f5c518')}
+                    ${polyline(low, '#3b82f6')}
+                    ${dots(high, '#a855f7')}
+                    ${dots(med, '#f5c518')}
+                    ${dots(low, '#3b82f6')}
+                    ${dateLabels}
+                </svg>
+            </div>
+            <div class="chart-legend">
+                <span class="chart-legend-item"><span class="chart-legend-dot" style="background:#3b82f6"></span>Lowest</span>
+                <span class="chart-legend-item"><span class="chart-legend-dot" style="background:#f5c518"></span>Median</span>
+                <span class="chart-legend-item"><span class="chart-legend-dot" style="background:#a855f7"></span>Highest</span>
+                <span class="chart-legend-item"><span class="chart-legend-dot" style="background:#e94560;opacity:0.5"></span>Face Value</span>
+            </div>
+            <div class="chart-stats">
+                <div class="chart-stat">
+                    <div class="chart-stat-value">$${low[low.length-1] || '—'}</div>
+                    <div class="chart-stat-label">Current Low</div>
+                </div>
+                <div class="chart-stat">
+                    <div class="chart-stat-value">$${med[med.length-1] || '—'}</div>
+                    <div class="chart-stat-label">Current Median</div>
+                </div>
+                <div class="chart-stat">
+                    <div class="chart-stat-value">${snapshots.length}</div>
+                    <div class="chart-stat-label">Data Points</div>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('chartBody').innerHTML = svg;
+    }
+
+    // Close chart on Escape
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeChart(); });
+
+    // Close score tooltips when clicking outside
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.score-ring-wrap.show-tooltip').forEach(el => el.classList.remove('show-tooltip'));
+    });
 
     // ─── Init ───
     loadData();

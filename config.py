@@ -1,10 +1,5 @@
 """Constants for World Cup Tickets MVP. No .env needed."""
 
-# TheSportsDB free API (test key = "3")
-SPORTSDB_BASE = "https://www.thesportsdb.com/api/v1/json/3"
-SPORTSDB_LEAGUE_ID = "4429"  # FIFA World Cup
-SPORTSDB_SEASON = "2026"
-
 # Reddit subreddits for ticket sentiment
 REDDIT_SUBS = ["WorldCup2026Tickets", "fifatickets"]
 
@@ -18,6 +13,7 @@ RSS_FEEDS = {
 # FIFA face value by round (USD)
 FACE_VALUES = {
     "Group":         {"cat1": 300, "cat2": 200, "cat3": 100},
+    "Round of 32":   {"cat1": 350, "cat2": 225, "cat3": 110},
     "Round of 16":   {"cat1": 400, "cat2": 275, "cat3": 125},
     "Quarter-final": {"cat1": 525, "cat2": 350, "cat3": 175},
     "Semi-final":    {"cat1": 775, "cat2": 500, "cat3": 250},
@@ -50,12 +46,14 @@ VENUE_SCORES = {
     "Estadio Azteca": 60,         # Mexico (resale cap)
     "Estadio BBVA": 55,           # Mexico
     "Estadio Akron": 55,          # Mexico
+    "Arrowhead Stadium": 75,                 # Kansas City
+    "Empower Field at Mile High": 70,        # Denver
 }
 
 # Team popularity tiers for resale demand
 POPULAR_TEAMS = {
-    "tier1": {"United States", "Mexico", "Canada", "Brazil", "Argentina", "England", "Germany", "France", "Spain"},
-    "tier2": {"Portugal", "Netherlands", "Italy", "Japan", "South Korea", "Belgium", "Colombia", "Uruguay"},
+    "tier1": {"United States", "USA", "Mexico", "Canada", "Brazil", "Argentina", "England", "Germany", "France", "Spain"},
+    "tier2": {"Portugal", "Netherlands", "Italy", "Japan", "South Korea", "Korea Republic", "Belgium", "Colombia", "Uruguay"},
 }
 
 # Round importance weights
@@ -64,6 +62,7 @@ ROUND_SCORES = {
     "Semi-final": 85,
     "Quarter-final": 70,
     "Round of 16": 55,
+    "Round of 32": 45,
     "3rd Place": 40,
     "Group": 30,
 }
