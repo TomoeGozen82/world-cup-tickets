@@ -1,0 +1,12 @@
+[project]
+name = "world-cup-tickets"
+version = "0.1.0"
+description = "FIFA 2026 World Cup ticket investment tracker"
+requires-python = ">=3.12"
+dependencies = [
+    "apscheduler>=3.11.2",
+    "fastapi>=0.135.1",
+    "feedparser>=6.0.12",
+    "httpx>=0.28.1",
+    "uvicorn>=0.41.0",
+]

@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+db/tickets.db
+.env
+*.egg-info/

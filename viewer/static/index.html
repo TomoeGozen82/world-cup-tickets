@@ -1,0 +1,1538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Cup 2026 — Ticket Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-deep: #08080f;
+            --bg-card: #111119;
+            --bg-card-hover: #16161f;
+            --bg-surface: #0d0d15;
+            --border: #1e1e2e;
+            --border-hover: #2e2e44;
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888a0;
+            --text-muted: #55556a;
+            --accent: #e94560;
+            --gold: #f5c518;
+            --gold-dim: #c9a200;
+
+            /* Round colors */
+            --round-group: #3b82f6;
+            --round-r16: #14b8a6;
+            --round-qf: #a855f7;
+            --round-sf: #f97316;
+            --round-final: #f5c518;
+            --round-3rd: #6b7280;
+
+            /* Source colors */
+            --src-espn: #e94560;
+            --src-guardian: #3b82f6;
+            --src-bbc: #f59e0b;
+            --src-goal: #22c55e;
+            --src-default: #6b7280;
+
+            /* Sentiment */
+            --sent-buying: #22c55e;
+            --sent-selling: #ef4444;
+            --sent-neutral: #6b7280;
+        }
+
+        body {
+            font-family: 'DM Sans', system-ui, sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Background texture */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(233,69,96,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 100%, rgba(245,197,24,0.04) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── Header ── */
+        .site-header {
+            position: relative;
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 1.5rem 1.25rem;
+            background: linear-gradient(180deg, rgba(17,17,25,0.95) 0%, var(--bg-deep) 100%);
+        }
+        .site-header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 10%;
+            right: 10%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(245,197,24,0.3), rgba(233,69,96,0.2), transparent);
+        }
+        .header-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .header-brand h1 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.6rem;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #ffffff 30%, var(--gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header-subtitle {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 0.15rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse-dot 2s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+            50% { opacity: 0.6; box-shadow: 0 0 0 4px rgba(34,197,94,0); }
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .countdown-box {
+            text-align: right;
+        }
+        .countdown-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .countdown-value {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--gold);
+        }
+        .update-time {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+        .btn-refresh {
+            padding: 0.45rem 1rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            font-family: inherit;
+        }
+        .btn-refresh:hover { background: #d63a52; }
+        .btn-refresh:active { transform: scale(0.97); }
+
+        /* ── Nav Tabs ── */
+        .site-nav {
+            border-bottom: 1px solid var(--border);
+            padding: 0 1.5rem;
+            background: var(--bg-surface);
+        }
+        .nav-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            gap: 0;
+        }
+        .tab-btn {
+            padding: 0.85rem 1.2rem;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: color 0.2s, border-color 0.2s;
+            font-family: inherit;
+            position: relative;
+        }
+        .tab-btn:hover { color: var(--text-secondary); }
+        .tab-btn.tab-active {
+            color: var(--text-primary);
+            border-bottom-color: var(--accent);
+        }
+        .tab-icon {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            vertical-align: -2px;
+            margin-right: 0.35rem;
+        }
+
+        /* ── Stats Bar ── */
+        .stats-bar {
+            max-width: 1280px;
+            margin: 1.25rem auto 0;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+        }
+        .stat-card {
+            background: rgba(17,17,25,0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.85rem 1rem;
+            text-align: center;
+        }
+        .stat-value {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            line-height: 1.1;
+        }
+        .stat-label {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-top: 0.25rem;
+        }
+
+        /* ── Main Content ── */
+        .main-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 1.25rem 1.5rem 3rem;
+            position: relative;
+            z-index: 1;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ── Filter Bar ── */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+        .filter-btn {
+            padding: 0.4rem 0.85rem;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .filter-btn:hover {
+            background: var(--bg-card);
+            border-color: var(--border-hover);
+            color: var(--text-secondary);
+        }
+        .filter-btn.active {
+            color: white;
+            border-color: transparent;
+        }
+        .filter-btn[data-filter="all"].active { background: var(--accent); }
+        .filter-btn[data-filter="Group"].active { background: var(--round-group); }
+        .filter-btn[data-filter="Round of 16"].active { background: var(--round-r16); }
+        .filter-btn[data-filter="Quarter-final"].active { background: var(--round-qf); }
+        .filter-btn[data-filter="Semi-final"].active { background: var(--round-sf); }
+        .filter-btn[data-filter="Final"].active { background: var(--round-final); color: #000; }
+        .filter-btn[data-filter="Third-place"].active { background: var(--round-3rd); }
+        .filter-count {
+            font-size: 0.65rem;
+            opacity: 0.7;
+            margin-left: 0.2rem;
+        }
+        .filter-spacer { flex: 1; }
+        .filter-input {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 8px;
+            padding: 0.45rem 0.75rem;
+            font-size: 0.8rem;
+            font-family: inherit;
+            width: 11rem;
+            transition: border-color 0.2s;
+        }
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        .filter-select {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            padding: 0.45rem 0.75rem;
+            font-size: 0.8rem;
+            font-family: inherit;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* ── Match Grid ── */
+        .match-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 0.85rem;
+        }
+
+        /* ── Match Card ── */
+        .match-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
+            opacity: 0;
+            transform: translateY(12px);
+            animation: card-enter 0.4s ease forwards;
+        }
+        .match-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        .match-card.high-value {
+            box-shadow: 0 0 0 1px rgba(245,197,24,0.15), 0 4px 20px rgba(245,197,24,0.08);
+        }
+        .match-card.high-value:hover {
+            box-shadow: 0 0 0 1px rgba(245,197,24,0.25), 0 8px 30px rgba(245,197,24,0.12);
+        }
+        @keyframes card-enter {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-top-border {
+            height: 3px;
+        }
+        .card-body {
+            padding: 1rem 1.1rem;
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.85rem;
+        }
+        .round-tag {
+            font-size: 0.68rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.2rem 0.55rem;
+            border-radius: 5px;
+            background: rgba(255,255,255,0.06);
+        }
+
+        /* Score Ring */
+        .score-ring-wrap {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            flex-shrink: 0;
+        }
+        .score-ring-wrap svg {
+            transform: rotate(-90deg);
+        }
+        .score-ring-bg {
+            fill: none;
+            stroke: rgba(255,255,255,0.06);
+            stroke-width: 3;
+        }
+        .score-ring-fill {
+            fill: none;
+            stroke-width: 3;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.8s ease;
+        }
+        .score-ring-text {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 0.78rem;
+        }
+
+        /* Teams */
+        .teams-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            margin-bottom: 0.85rem;
+        }
+        .team-name {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .team-name.home { justify-content: flex-end; }
+        .team-name.away { justify-content: flex-start; }
+        .team-flag {
+            width: 22px;
+            height: 16px;
+            border-radius: 2px;
+            object-fit: cover;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        .vs-divider {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        /* Meta row */
+        .card-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+        .meta-venue {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .venue-flag {
+            width: 18px;
+            height: 13px;
+            border-radius: 2px;
+            object-fit: cover;
+        }
+
+        /* Prices */
+        .price-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 0.65rem;
+        }
+        .price-cell {
+            text-align: center;
+            padding: 0.4rem 0;
+            background: rgba(255,255,255,0.03);
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+        .price-label {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .price-value {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+        }
+
+        /* Mexico warning */
+        .mexico-alert {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.45rem 0.65rem;
+            background: rgba(245,158,11,0.1);
+            border: 1px solid rgba(245,158,11,0.2);
+            border-radius: 6px;
+            margin-bottom: 0.65rem;
+        }
+        .mexico-alert-icon {
+            color: #f59e0b;
+            flex-shrink: 0;
+        }
+        .mexico-alert-text {
+            font-size: 0.7rem;
+            color: #fbbf24;
+            font-weight: 500;
+        }
+
+        /* Card footer */
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
+            padding-top: 0.65rem;
+            border-top: 1px solid var(--border);
+        }
+        .btn-buy {
+            flex: 1;
+            text-align: center;
+            padding: 0.5rem;
+            background: var(--accent);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 7px;
+            text-decoration: none;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+        .btn-buy:hover { background: #d63a52; }
+        .btn-details {
+            padding: 0.5rem 0.85rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .btn-details:hover {
+            border-color: var(--border-hover);
+            color: var(--text-secondary);
+        }
+
+        /* ── Resale Prices ── */
+        .resale-section {
+            margin-bottom: 0.65rem;
+        }
+        .resale-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.4rem;
+        }
+        .resale-label {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .resale-label svg { flex-shrink: 0; }
+        .resale-listings {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+        .resale-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+        .resale-cell {
+            text-align: center;
+            padding: 0.4rem 0;
+            background: rgba(245,197,24,0.04);
+            border-radius: 6px;
+            border: 1px solid rgba(245,197,24,0.08);
+        }
+        .resale-cell .price-label {
+            color: var(--gold-dim);
+        }
+        .resale-cell .price-value {
+            color: var(--gold);
+        }
+        .markup-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+        }
+        .markup-badge.up {
+            background: rgba(34,197,94,0.12);
+            color: #4ade80;
+        }
+        .markup-badge.down {
+            background: rgba(239,68,68,0.12);
+            color: #f87171;
+        }
+        .seatgeek-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.7rem;
+            color: var(--gold-dim);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .seatgeek-link:hover { color: var(--gold); }
+
+        /* ── Skeleton ── */
+        .skeleton-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .skeleton-bar {
+            height: 3px;
+            background: var(--border);
+        }
+        .skeleton-body {
+            padding: 1rem;
+        }
+        .skeleton-line {
+            height: 12px;
+            border-radius: 6px;
+            background: linear-gradient(90deg, var(--bg-card) 25%, rgba(255,255,255,0.04) 50%, var(--bg-card) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s ease-in-out infinite;
+            margin-bottom: 0.75rem;
+        }
+        .skeleton-line.w60 { width: 60%; }
+        .skeleton-line.w80 { width: 80%; }
+        .skeleton-line.w40 { width: 40%; }
+        .skeleton-line.h24 { height: 24px; }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* ── Spinner ── */
+        .spinner-wrap {
+            display: flex;
+            justify-content: center;
+            padding: 3rem;
+        }
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── News Cards ── */
+        .news-list { display: flex; flex-direction: column; gap: 0.5rem; }
+        .news-card {
+            display: block;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.9rem 1rem;
+            text-decoration: none;
+            transition: border-color 0.2s, background 0.2s;
+            border-left: 3px solid var(--src-default);
+            position: relative;
+        }
+        .news-card:hover {
+            border-color: var(--border-hover);
+            background: var(--bg-card-hover);
+        }
+        .news-card[data-source*="ESPN"] { border-left-color: var(--src-espn); }
+        .news-card[data-source*="Guardian"] { border-left-color: var(--src-guardian); }
+        .news-card[data-source*="BBC"] { border-left-color: var(--src-bbc); }
+        .news-card[data-source*="Goal"] { border-left-color: var(--src-goal); }
+        .news-title {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.3rem;
+            line-height: 1.35;
+        }
+        .news-meta {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .news-arrow {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .news-card:hover .news-arrow { opacity: 1; }
+
+        /* ── Reddit Cards ── */
+        .reddit-list { display: flex; flex-direction: column; gap: 0.5rem; }
+        .reddit-card {
+            display: block;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.9rem 1rem;
+            text-decoration: none;
+            transition: border-color 0.2s, background 0.2s;
+            border-left: 3px solid var(--sent-neutral);
+        }
+        .reddit-card:hover {
+            border-color: var(--border-hover);
+            background: var(--bg-card-hover);
+        }
+        .reddit-card[data-sentiment="buying"] { border-left-color: var(--sent-buying); }
+        .reddit-card[data-sentiment="selling"] { border-left-color: var(--sent-selling); }
+        .reddit-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.35rem;
+        }
+        .sentiment-badge {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .sentiment-badge.buying { background: rgba(34,197,94,0.15); color: #4ade80; }
+        .sentiment-badge.selling { background: rgba(239,68,68,0.15); color: #f87171; }
+        .sentiment-badge.neutral { background: rgba(107,114,128,0.15); color: #9ca3af; }
+        .reddit-sub {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+        .reddit-title {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.3rem;
+            line-height: 1.35;
+        }
+        .reddit-stats {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+        .reddit-stat {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+        }
+
+        /* ── Calculator ── */
+        .calc-wrap {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        .calc-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+        }
+        .calc-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.15rem;
+            color: var(--text-primary);
+            margin-bottom: 0.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .calc-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 1.25rem;
+            line-height: 1.4;
+        }
+        .calc-field {
+            margin-bottom: 1rem;
+        }
+        .calc-label {
+            display: block;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.35rem;
+            font-weight: 500;
+        }
+        .calc-input {
+            width: 100%;
+            background: var(--bg-deep);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 8px;
+            padding: 0.6rem 0.85rem;
+            font-size: 0.9rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .calc-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        .btn-calc {
+            width: 100%;
+            padding: 0.7rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            font-family: inherit;
+            margin-top: 0.25rem;
+        }
+        .btn-calc:hover { background: #d63a52; }
+        .btn-calc:active { transform: scale(0.98); }
+
+        .calc-result {
+            margin-top: 1.25rem;
+            border-top: 1px solid var(--border);
+            padding-top: 1rem;
+            display: none;
+        }
+        .calc-result.show {
+            display: block;
+            animation: result-reveal 0.35s ease;
+        }
+        @keyframes result-reveal {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.45rem 0;
+            font-size: 0.82rem;
+        }
+        .calc-row-label { color: var(--text-secondary); }
+        .calc-row-value { font-weight: 600; color: var(--text-primary); }
+        .calc-profit-card {
+            margin-top: 0.5rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .calc-profit-card.profit { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); }
+        .calc-profit-card.loss { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); }
+        .calc-profit-amount {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.4rem;
+        }
+        .calc-profit-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 0.15rem;
+        }
+
+        .calc-mexico-warning {
+            margin-top: 1.25rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: rgba(245,158,11,0.08);
+            border: 1px solid rgba(245,158,11,0.2);
+            border-radius: 8px;
+        }
+        .calc-mexico-warning svg { flex-shrink: 0; margin-top: 1px; }
+        .calc-mexico-warning p {
+            font-size: 0.75rem;
+            color: #fbbf24;
+            line-height: 1.4;
+        }
+
+        /* ── Empty State ── */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            display: none;
+        }
+        .empty-state.show { display: block; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .stats-bar { grid-template-columns: repeat(2, 1fr); }
+            .match-grid { grid-template-columns: 1fr; }
+            .header-inner { flex-direction: column; align-items: flex-start; }
+            .header-right { width: 100%; justify-content: space-between; }
+            .filter-bar { gap: 0.4rem; }
+            .filter-input { width: 100%; order: 10; }
+            .filter-select { width: 100%; order: 11; }
+            .filter-spacer { display: none; }
+        }
+        @media (max-width: 480px) {
+            .stats-bar { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+            .site-header { padding: 1rem; }
+            .main-content { padding: 1rem; }
+            .price-row { grid-template-columns: repeat(3, 1fr); gap: 0.35rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="header-brand">
+                <h1>FIFA World Cup 2026</h1>
+                <div class="header-subtitle">
+                    <span class="live-dot"></span>
+                    <span>Ticket Investment Tracker</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="countdown-box">
+                    <div class="countdown-label">Kickoff in</div>
+                    <div class="countdown-value" id="countdown">--d --h --m</div>
+                </div>
+                <div>
+                    <div class="update-time" id="lastUpdate"></div>
+                    <button class="btn-refresh" onclick="refreshData()">Refresh</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Nav -->
+    <nav class="site-nav">
+        <div class="nav-inner">
+            <button class="tab-btn tab-active" data-tab="matches">
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                Matches
+            </button>
+            <button class="tab-btn" data-tab="news">
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5"/></svg>
+                News
+            </button>
+            <button class="tab-btn" data-tab="reddit">
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                Reddit
+            </button>
+            <button class="tab-btn" data-tab="calculator">
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h8M8 14h3M8 18h3M15 14h1M15 18h1"/></svg>
+                Calculator
+            </button>
+        </div>
+    </nav>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar" id="statsBar">
+        <div class="stat-card">
+            <div class="stat-value" id="statTotal">--</div>
+            <div class="stat-label">Total Matches</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="statHighValue">--</div>
+            <div class="stat-label">High Value (65+)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="statAvgScore">--</div>
+            <div class="stat-label">Avg Score</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="statDays">--</div>
+            <div class="stat-label">Days to Kickoff</div>
+        </div>
+    </div>
+
+    <main class="main-content">
+
+        <!-- Matches Tab -->
+        <div id="tab-matches" class="tab-content active">
+            <div class="filter-bar">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="Group">Group</button>
+                <button class="filter-btn" data-filter="Round of 16">R16</button>
+                <button class="filter-btn" data-filter="Quarter-final">QF</button>
+                <button class="filter-btn" data-filter="Semi-final">SF</button>
+                <button class="filter-btn" data-filter="Final">Final</button>
+                <span class="filter-spacer"></span>
+                <input id="teamSearch" type="text" placeholder="Search team…" class="filter-input" oninput="filterMatches()">
+                <select id="sortSelect" class="filter-select" onchange="filterMatches()">
+                    <option value="score">Sort: Value Score</option>
+                    <option value="date">Sort: Date</option>
+                    <option value="price">Sort: Price</option>
+                </select>
+                <select id="countryFilter" class="filter-select" onchange="filterMatches()">
+                    <option value="">All Countries</option>
+                    <option value="USA">USA</option>
+                    <option value="Canada">Canada</option>
+                    <option value="Mexico">Mexico</option>
+                </select>
+            </div>
+
+            <div id="matchGrid" class="match-grid">
+                <div class="skeleton-card"><div class="skeleton-bar"></div><div class="skeleton-body"><div class="skeleton-line w60"></div><div class="skeleton-line h24 w80"></div><div class="skeleton-line w40"></div></div></div>
+                <div class="skeleton-card"><div class="skeleton-bar"></div><div class="skeleton-body"><div class="skeleton-line w60"></div><div class="skeleton-line h24 w80"></div><div class="skeleton-line w40"></div></div></div>
+                <div class="skeleton-card"><div class="skeleton-bar"></div><div class="skeleton-body"><div class="skeleton-line w60"></div><div class="skeleton-line h24 w80"></div><div class="skeleton-line w40"></div></div></div>
+            </div>
+            <div id="noMatches" class="empty-state">No matches found.</div>
+        </div>
+
+        <!-- News Tab -->
+        <div id="tab-news" class="tab-content">
+            <div id="newsList" class="news-list">
+                <div class="skeleton-card" style="border-radius:10px"><div class="skeleton-body"><div class="skeleton-line w80"></div><div class="skeleton-line w40"></div></div></div>
+                <div class="skeleton-card" style="border-radius:10px"><div class="skeleton-body"><div class="skeleton-line w80"></div><div class="skeleton-line w40"></div></div></div>
+            </div>
+            <div id="noNews" class="empty-state">No World Cup news yet. Data refreshes every 4 hours.</div>
+        </div>
+
+        <!-- Reddit Tab -->
+        <div id="tab-reddit" class="tab-content">
+            <div id="redditList" class="reddit-list">
+                <div class="skeleton-card" style="border-radius:10px"><div class="skeleton-body"><div class="skeleton-line w80"></div><div class="skeleton-line w40"></div></div></div>
+                <div class="skeleton-card" style="border-radius:10px"><div class="skeleton-body"><div class="skeleton-line w80"></div><div class="skeleton-line w40"></div></div></div>
+            </div>
+            <div id="noReddit" class="empty-state">No Reddit posts yet. Data refreshes every 2 hours.</div>
+        </div>
+
+        <!-- Calculator Tab -->
+        <div id="tab-calculator" class="tab-content">
+            <div class="calc-wrap">
+                <div class="calc-card">
+                    <div class="calc-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h8M8 14h3M8 18h3M15 14h1M15 18h1"/></svg>
+                        FIFA Exchange Fee Calculator
+                    </div>
+                    <div class="calc-desc">
+                        FIFA charges 15% buyer premium and 15% seller fee on their official ticket exchange.
+                    </div>
+                    <div class="calc-field">
+                        <label class="calc-label">Purchase Price ($)</label>
+                        <input id="calcBuy" type="number" placeholder="e.g. 300" class="calc-input">
+                    </div>
+                    <div class="calc-field">
+                        <label class="calc-label">Sale Price ($)</label>
+                        <input id="calcSell" type="number" placeholder="e.g. 500" class="calc-input">
+                    </div>
+                    <button class="btn-calc" onclick="runCalc()">Calculate</button>
+
+                    <div id="calcResult" class="calc-result">
+                        <div class="calc-row">
+                            <span class="calc-row-label">Total cost (with 15% buyer fee)</span>
+                            <span class="calc-row-value" id="resCost"></span>
+                        </div>
+                        <div class="calc-row">
+                            <span class="calc-row-label">Net revenue (after 15% seller fee)</span>
+                            <span class="calc-row-value" id="resRevenue"></span>
+                        </div>
+                        <div id="profitCard" class="calc-profit-card">
+                            <div class="calc-profit-amount" id="resProfit"></div>
+                            <div class="calc-profit-label">Net Profit · <span id="resRoi"></span> ROI</div>
+                        </div>
+                    </div>
+
+                    <div class="calc-mexico-warning">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                        <p><strong>Mexico Venues:</strong> Resale is capped at face value by Mexican law. Estadio Azteca, Estadio BBVA, and Estadio Akron cannot be resold above face value.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    // ─── Data & State ───
+    let allMatches = [];
+
+    // ─── Team → ISO Code Mapping ───
+    const TEAM_ISO = {
+        'Argentina': 'ar', 'Australia': 'au', 'Belgium': 'be', 'Bolivia': 'bo',
+        'Brazil': 'br', 'Cameroon': 'cm', 'Canada': 'ca', 'Chile': 'cl',
+        'China PR': 'cn', 'Colombia': 'co', 'Costa Rica': 'cr', 'Croatia': 'hr',
+        'Czech Republic': 'cz', 'Denmark': 'dk', 'Ecuador': 'ec', 'Egypt': 'eg',
+        'England': 'gb-eng', 'France': 'fr', 'Germany': 'de', 'Ghana': 'gh',
+        'Greece': 'gr', 'Honduras': 'hn', 'Hungary': 'hu', 'Iran': 'ir',
+        'Iraq': 'iq', 'Italy': 'it', 'Ivory Coast': 'ci', 'Jamaica': 'jm',
+        'Japan': 'jp', 'Mexico': 'mx', 'Morocco': 'ma', 'Netherlands': 'nl',
+        'New Zealand': 'nz', 'Nigeria': 'ng', 'North Macedonia': 'mk',
+        'Norway': 'no', 'Panama': 'pa', 'Paraguay': 'py', 'Peru': 'pe',
+        'Poland': 'pl', 'Portugal': 'pt', 'Qatar': 'qa', 'Romania': 'ro',
+        'Russia': 'ru', 'Saudi Arabia': 'sa', 'Scotland': 'gb-sct',
+        'Senegal': 'sn', 'Serbia': 'rs', 'Slovakia': 'sk', 'Slovenia': 'si',
+        'South Africa': 'za', 'South Korea': 'kr', 'Spain': 'es',
+        'Sweden': 'se', 'Switzerland': 'ch', 'Tunisia': 'tn', 'Turkey': 'tr',
+        'Ukraine': 'ua', 'United States': 'us', 'USA': 'us', 'Uruguay': 'uy',
+        'Uzbekistan': 'uz', 'Venezuela': 've', 'Wales': 'gb-wls',
+        'Indonesia': 'id', 'Vietnam': 'vn', 'Thailand': 'th', 'Philippines': 'ph',
+        'India': 'in', 'Algeria': 'dz', 'Congo DR': 'cd', 'Mali': 'ml',
+        'Bahrain': 'bh', 'Oman': 'om', 'Palestine': 'ps', 'Jordan': 'jo',
+        'United Arab Emirates': 'ae', 'Kenya': 'ke', 'Tanzania': 'tz',
+        'Trinidad and Tobago': 'tt', 'El Salvador': 'sv', 'Guatemala': 'gt',
+        'Cuba': 'cu', 'Haiti': 'ht', 'Curacao': 'cw', 'Suriname': 'sr',
+    };
+
+    const COUNTRY_ISO = { 'USA': 'us', 'Canada': 'ca', 'Mexico': 'mx' };
+
+    const ROUND_COLORS = {
+        'Group':          { border: '#3b82f6', bg: 'rgba(59,130,246,0.12)', text: '#60a5fa' },
+        'Round of 16':    { border: '#14b8a6', bg: 'rgba(20,184,166,0.12)', text: '#5eead4' },
+        'Quarter-final':  { border: '#a855f7', bg: 'rgba(168,85,247,0.12)', text: '#c084fc' },
+        'Semi-final':     { border: '#f97316', bg: 'rgba(249,115,22,0.12)', text: '#fb923c' },
+        'Final':          { border: '#f5c518', bg: 'rgba(245,197,24,0.12)', text: '#fbbf24' },
+        'Third-place':    { border: '#6b7280', bg: 'rgba(107,114,128,0.12)', text: '#9ca3af' },
+    };
+
+    const ROUND_LABELS = {
+        'Group': 'Group', 'Round of 16': 'R16', 'Quarter-final': 'QF',
+        'Semi-final': 'SF', 'Final': 'Final', 'Third-place': '3rd',
+    };
+
+    // ─── Helpers ───
+    function flagUrl(iso, w = 40) {
+        return `https://flagcdn.com/w${w}/${iso}.png`;
+    }
+
+    function teamFlag(name, size = 22) {
+        const iso = TEAM_ISO[name];
+        if (!iso) return '';
+        return `<img src="${flagUrl(iso, 40)}" alt="${name}" width="${size}" class="team-flag" onerror="this.style.display='none'" loading="lazy">`;
+    }
+
+    function scoreRing(score) {
+        const r = 18, c = 2 * Math.PI * r;
+        const pct = Math.min(score, 100) / 100;
+        const offset = c * (1 - pct);
+        let color;
+        if (score >= 65) color = '#4ade80';
+        else if (score >= 40) color = '#fbbf24';
+        else color = '#f87171';
+
+        return `
+            <div class="score-ring-wrap">
+                <svg width="44" height="44" viewBox="0 0 44 44">
+                    <circle class="score-ring-bg" cx="22" cy="22" r="${r}"/>
+                    <circle class="score-ring-fill" cx="22" cy="22" r="${r}"
+                        stroke="${color}"
+                        stroke-dasharray="${c}"
+                        stroke-dashoffset="${offset}"/>
+                </svg>
+                <div class="score-ring-text" style="color:${color}">${score}</div>
+            </div>`;
+    }
+
+    function relativeTime(dateStr) {
+        if (!dateStr) return '';
+        const now = Date.now();
+        const then = new Date(dateStr).getTime();
+        const diffMs = now - then;
+        if (isNaN(diffMs) || diffMs < 0) return formatDate(dateStr.split(' ')[0]);
+
+        const mins = Math.floor(diffMs / 60000);
+        if (mins < 60) return `${mins}m ago`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${hrs}h ago`;
+        const days = Math.floor(hrs / 24);
+        if (days < 7) return `${days}d ago`;
+        return formatDate(dateStr.split(' ')[0]);
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return 'TBD';
+        const d = new Date(dateStr + 'T00:00:00');
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function getRoundColor(round) {
+        return ROUND_COLORS[round] || ROUND_COLORS['Group'];
+    }
+
+    // ─── Countdown ───
+    function updateCountdown() {
+        const kickoff = new Date('2026-06-11T00:00:00Z').getTime();
+        const now = Date.now();
+        const diff = kickoff - now;
+        if (diff <= 0) {
+            document.getElementById('countdown').textContent = 'LIVE NOW';
+            return;
+        }
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff % 86400000) / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        document.getElementById('countdown').textContent = `${d}d ${h}h ${m}m`;
+        document.getElementById('statDays').textContent = d;
+    }
+    updateCountdown();
+    setInterval(updateCountdown, 60000);
+
+    // ─── Tab Switching ───
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+            btn.classList.add('tab-active');
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+        });
+    });
+
+    // ─── Filter Buttons ───
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            filterMatches();
+        });
+    });
+
+    // ─── Render Match Card ───
+    function renderMatchCard(m, index) {
+        const rc = getRoundColor(m.round);
+        const delay = Math.min(index, 10) * 50;
+        const isHigh = m.value_score >= 75;
+        const venueIso = COUNTRY_ISO[m.country];
+
+        const mexicoAlert = m.is_mexico_venue ? `
+            <div class="mexico-alert">
+                <svg class="mexico-alert-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                <span class="mexico-alert-text">Resale capped at face value</span>
+            </div>` : '';
+
+        return `
+            <div class="match-card${isHigh ? ' high-value' : ''}" style="animation-delay:${delay}ms">
+                <div class="card-top-border" style="background:${rc.border}"></div>
+                <div class="card-body">
+                    <div class="card-header">
+                        <span class="round-tag" style="background:${rc.bg};color:${rc.text}">${ROUND_LABELS[m.round] || m.round}</span>
+                        ${scoreRing(m.value_score)}
+                    </div>
+
+                    <div class="teams-row">
+                        <span class="team-name home">
+                            ${teamFlag(m.home_team)}
+                            ${m.home_team || 'TBD'}
+                        </span>
+                        <span class="vs-divider">vs</span>
+                        <span class="team-name away">
+                            ${m.away_team || 'TBD'}
+                            ${teamFlag(m.away_team)}
+                        </span>
+                    </div>
+
+                    <div class="card-meta">
+                        <span>${formatDate(m.match_date)}</span>
+                        <span class="meta-venue">
+                            ${venueIso ? `<img src="${flagUrl(venueIso, 20)}" class="venue-flag" alt="${m.country}" onerror="this.style.display='none'" loading="lazy">` : ''}
+                            ${m.venue || 'TBD'}
+                        </span>
+                    </div>
+
+                    <div class="price-row">
+                        <div class="price-cell">
+                            <div class="price-label">Cat 3</div>
+                            <div class="price-value">$${m.face_value_cat3 || '—'}</div>
+                        </div>
+                        <div class="price-cell">
+                            <div class="price-label">Cat 2</div>
+                            <div class="price-value">$${m.face_value_cat2 || '—'}</div>
+                        </div>
+                        <div class="price-cell">
+                            <div class="price-label">Cat 1</div>
+                            <div class="price-value">$${m.face_value_cat1 || '—'}</div>
+                        </div>
+                    </div>
+
+                    ${renderResaleSection(m)}
+
+                    ${mexicoAlert}
+
+                    <div class="card-actions">
+                        <a href="https://www.fifa.com/fifaplus/en/tournaments/mens/worldcup/canadamexicousa2026/tickets"
+                           target="_blank" rel="noopener" class="btn-buy">Buy Tickets</a>
+                        ${m.seatgeek_url ? `<a href="${m.seatgeek_url}" target="_blank" rel="noopener" class="btn-details">Resale</a>` : ''}
+                        ${m.external_id ? `<a href="https://www.thesportsdb.com/event/${m.external_id}" target="_blank" rel="noopener" class="btn-details">Details</a>` : ''}
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    // ─── Resale Section ───
+    function renderResaleSection(m) {
+        if (!m.resale_lowest && !m.resale_median) return '';
+
+        const face = m.face_value_cat3 || 100;
+        const median = m.resale_median || 0;
+        const markupPct = Math.round(((median - face) / face) * 100);
+        const markupClass = markupPct >= 0 ? 'up' : 'down';
+        const markupArrow = markupPct >= 0 ? '↑' : '↓';
+
+        return `
+            <div class="resale-section">
+                <div class="resale-header">
+                    <span class="resale-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gold-dim)" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                        Resale Market
+                    </span>
+                    <span>
+                        <span class="markup-badge ${markupClass}">${markupArrow} ${Math.abs(markupPct)}% vs face</span>
+                        ${m.listing_count ? `<span class="resale-listings"> · ${m.listing_count} listings</span>` : ''}
+                    </span>
+                </div>
+                <div class="resale-row">
+                    <div class="resale-cell">
+                        <div class="price-label">Low</div>
+                        <div class="price-value">$${m.resale_lowest || '—'}</div>
+                    </div>
+                    <div class="resale-cell">
+                        <div class="price-label">Median</div>
+                        <div class="price-value">$${m.resale_median || '—'}</div>
+                    </div>
+                    <div class="resale-cell">
+                        <div class="price-label">High</div>
+                        <div class="price-value">$${m.resale_highest || '—'}</div>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    // ─── Filter & Sort ───
+    function filterMatches() {
+        const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+        const search = document.getElementById('teamSearch').value.toLowerCase();
+        const country = document.getElementById('countryFilter').value;
+        const sort = document.getElementById('sortSelect').value;
+
+        let filtered = allMatches;
+        if (activeFilter !== 'all') {
+            filtered = filtered.filter(m => m.round === activeFilter);
+        }
+        if (search) {
+            filtered = filtered.filter(m =>
+                (m.home_team || '').toLowerCase().includes(search) ||
+                (m.away_team || '').toLowerCase().includes(search)
+            );
+        }
+        if (country) {
+            filtered = filtered.filter(m => m.country === country);
+        }
+
+        // Sort
+        filtered = [...filtered];
+        if (sort === 'date') {
+            filtered.sort((a, b) => (a.match_date || '').localeCompare(b.match_date || ''));
+        } else if (sort === 'price') {
+            filtered.sort((a, b) => (b.face_value_cat1 || 0) - (a.face_value_cat1 || 0));
+        } else {
+            filtered.sort((a, b) => (b.value_score || 0) - (a.value_score || 0));
+        }
+
+        const grid = document.getElementById('matchGrid');
+        const noMsg = document.getElementById('noMatches');
+        if (filtered.length === 0) {
+            grid.innerHTML = '';
+            noMsg.classList.add('show');
+        } else {
+            noMsg.classList.remove('show');
+            grid.innerHTML = filtered.map((m, i) => renderMatchCard(m, i)).join('');
+        }
+
+        // Update filter counts
+        updateFilterCounts();
+    }
+
+    function updateFilterCounts() {
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            const f = btn.dataset.filter;
+            const existing = btn.querySelector('.filter-count');
+            if (existing) existing.remove();
+            let count;
+            if (f === 'all') count = allMatches.length;
+            else count = allMatches.filter(m => m.round === f).length;
+            if (count > 0) {
+                const span = document.createElement('span');
+                span.className = 'filter-count';
+                span.textContent = `(${count})`;
+                btn.appendChild(span);
+            }
+        });
+    }
+
+    // ─── Stats ───
+    function updateStats() {
+        document.getElementById('statTotal').textContent = allMatches.length;
+        document.getElementById('statHighValue').textContent = allMatches.filter(m => m.value_score >= 65).length;
+        const avg = allMatches.length ? Math.round(allMatches.reduce((s, m) => s + (m.value_score || 0), 0) / allMatches.length) : 0;
+        document.getElementById('statAvgScore').textContent = avg;
+    }
+
+    // ─── News ───
+    function renderNews(items) {
+        const list = document.getElementById('newsList');
+        const noMsg = document.getElementById('noNews');
+        if (!items.length) {
+            list.innerHTML = '';
+            noMsg.classList.add('show');
+            return;
+        }
+        noMsg.classList.remove('show');
+        list.innerHTML = items.map(n => `
+            <a href="${n.url}" target="_blank" rel="noopener" class="news-card" data-source="${n.source_name || ''}">
+                <div class="news-title">${n.title}</div>
+                <div class="news-meta">
+                    <span>${n.source_name || 'Unknown'}</span>
+                    <span>·</span>
+                    <span>${relativeTime(n.published_at)}</span>
+                </div>
+                <svg class="news-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17l9.2-9.2M17 17V7.8H7.8"/></svg>
+            </a>
+        `).join('');
+    }
+
+    // ─── Reddit ───
+    function renderReddit(posts) {
+        const list = document.getElementById('redditList');
+        const noMsg = document.getElementById('noReddit');
+        if (!posts.length) {
+            list.innerHTML = '';
+            noMsg.classList.add('show');
+            return;
+        }
+        noMsg.classList.remove('show');
+        list.innerHTML = posts.map(p => {
+            const arrow = p.sentiment === 'buying' ? '↑' : p.sentiment === 'selling' ? '↓' : '–';
+            return `
+                <a href="${p.url}" target="_blank" rel="noopener" class="reddit-card" data-sentiment="${p.sentiment}">
+                    <div class="reddit-header">
+                        <span class="sentiment-badge ${p.sentiment}">${arrow} ${p.sentiment}</span>
+                        <span class="reddit-sub">r/${p.subreddit}</span>
+                    </div>
+                    <div class="reddit-title">${p.title}</div>
+                    <div class="reddit-stats">
+                        <span class="reddit-stat">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                            ${p.score}
+                        </span>
+                        <span class="reddit-stat">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                            ${p.num_comments}
+                        </span>
+                        <span>${relativeTime(p.published_at)}</span>
+                    </div>
+                </a>`;
+        }).join('');
+    }
+
+    // ─── Calculator ───
+    async function runCalc() {
+        const buy = parseFloat(document.getElementById('calcBuy').value);
+        const sell = parseFloat(document.getElementById('calcSell').value);
+        if (isNaN(buy) || isNaN(sell)) return;
+
+        try {
+            const res = await fetch('/api/analysis/fee', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ purchase_price: buy, sale_price: sell }),
+            });
+            const data = await res.json();
+
+            document.getElementById('resCost').textContent = '$' + data.total_cost.toFixed(2);
+            document.getElementById('resRevenue').textContent = '$' + data.net_revenue.toFixed(2);
+
+            const profitEl = document.getElementById('resProfit');
+            profitEl.textContent = (data.net_profit >= 0 ? '+$' : '-$') + Math.abs(data.net_profit).toFixed(2);
+
+            const roiEl = document.getElementById('resRoi');
+            roiEl.textContent = data.roi_percent.toFixed(1) + '%';
+
+            const profitCard = document.getElementById('profitCard');
+            profitCard.className = 'calc-profit-card ' + (data.net_profit >= 0 ? 'profit' : 'loss');
+            profitEl.style.color = data.net_profit >= 0 ? '#4ade80' : '#f87171';
+
+            const resultEl = document.getElementById('calcResult');
+            resultEl.classList.remove('show');
+            // Force reflow for re-animation
+            void resultEl.offsetWidth;
+            resultEl.classList.add('show');
+            resultEl.style.display = 'block';
+        } catch (e) {
+            console.error('Calc failed:', e);
+        }
+    }
+
+    // ─── Data Loading ───
+    async function loadData() {
+        try {
+            const [matchRes, newsRes, redditRes] = await Promise.all([
+                fetch('/api/analysis/scores'),
+                fetch('/api/news'),
+                fetch('/api/reddit'),
+            ]);
+            allMatches = await matchRes.json();
+            updateStats();
+            updateFilterCounts();
+            filterMatches();
+            renderNews(await newsRes.json());
+            renderReddit(await redditRes.json());
+            document.getElementById('lastUpdate').textContent = 'Updated ' + new Date().toLocaleTimeString();
+        } catch (e) {
+            console.error('Failed to load data:', e);
+        }
+    }
+
+    async function refreshData() {
+        try {
+            await fetch('/api/refresh', { method: 'POST' });
+            setTimeout(loadData, 3000);
+        } catch (e) {
+            console.error('Refresh failed:', e);
+        }
+    }
+
+    // ─── Init ───
+    loadData();
+    setInterval(loadData, 300000);
+    </script>
+</body>
+</html>
