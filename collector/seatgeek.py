@@ -14,6 +14,7 @@ from db.database import (
     update_seatgeek_mapping,
     update_resale_prices,
     insert_price_snapshot,
+    upsert_platform_price,
 )
 
 log = logging.getLogger(__name__)
@@ -262,6 +263,15 @@ def discover() -> int:
                     highest=data["highest"],
                     listing_count=0,
                 )
+                upsert_platform_price(
+                    match_id=match["id"],
+                    platform="vividseats",
+                    lowest=data["lowest"],
+                    median=data["median"],
+                    highest=data["highest"],
+                    listing_count=0,
+                    listing_url=ev["url"],
+                )
 
         log.info(f"[vividseats] Mapped {mapped}/{len(events)} events to matches")
         return mapped
@@ -309,6 +319,15 @@ def collect_prices() -> int:
                 average=data["average"],
                 highest=data["highest"],
                 listing_count=0,
+            )
+            upsert_platform_price(
+                match_id=match_id,
+                platform="vividseats",
+                lowest=data["lowest"],
+                median=data["median"],
+                highest=data["highest"],
+                listing_count=0,
+                listing_url=url,
             )
             updated += 1
 
