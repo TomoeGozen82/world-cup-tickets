@@ -33,17 +33,6 @@
             --round-final: #f5c518;
             --round-3rd: #6b7280;
 
-            /* Source colors */
-            --src-espn: #e94560;
-            --src-guardian: #3b82f6;
-            --src-bbc: #f59e0b;
-            --src-goal: #22c55e;
-            --src-default: #6b7280;
-
-            /* Sentiment */
-            --sent-buying: #22c55e;
-            --sent-selling: #ef4444;
-            --sent-neutral: #6b7280;
         }
 
         body {
@@ -159,44 +148,6 @@
         }
         .btn-refresh:hover { background: #d63a52; }
         .btn-refresh:active { transform: scale(0.97); }
-
-        /* ── Nav Tabs ── */
-        .site-nav {
-            border-bottom: 1px solid var(--border);
-            padding: 0 1.5rem;
-            background: var(--bg-surface);
-        }
-        .nav-inner {
-            max-width: 1280px;
-            margin: 0 auto;
-            display: flex;
-            gap: 0;
-        }
-        .tab-btn {
-            padding: 0.85rem 1.2rem;
-            font-size: 0.82rem;
-            font-weight: 500;
-            color: var(--text-muted);
-            background: none;
-            border: none;
-            border-bottom: 2px solid transparent;
-            cursor: pointer;
-            transition: color 0.2s, border-color 0.2s;
-            font-family: inherit;
-            position: relative;
-        }
-        .tab-btn:hover { color: var(--text-secondary); }
-        .tab-btn.tab-active {
-            color: var(--text-primary);
-            border-bottom-color: var(--accent);
-        }
-        .tab-icon {
-            display: inline-block;
-            width: 14px;
-            height: 14px;
-            vertical-align: -2px;
-            margin-right: 0.35rem;
-        }
 
         /* ── Stats Bar ── */
         .stats-bar {
@@ -766,242 +717,6 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ── News Cards ── */
-        .news-list { display: flex; flex-direction: column; gap: 0.5rem; }
-        .news-card {
-            display: block;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 0.9rem 1rem;
-            text-decoration: none;
-            transition: border-color 0.2s, background 0.2s;
-            border-left: 3px solid var(--src-default);
-            position: relative;
-        }
-        .news-card:hover {
-            border-color: var(--border-hover);
-            background: var(--bg-card-hover);
-        }
-        .news-card[data-source*="ESPN"] { border-left-color: var(--src-espn); }
-        .news-card[data-source*="Guardian"] { border-left-color: var(--src-guardian); }
-        .news-card[data-source*="BBC"] { border-left-color: var(--src-bbc); }
-        .news-card[data-source*="Goal"] { border-left-color: var(--src-goal); }
-        .news-title {
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--text-primary);
-            margin-bottom: 0.3rem;
-            line-height: 1.35;
-        }
-        .news-meta {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .news-arrow {
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        .news-card:hover .news-arrow { opacity: 1; }
-
-        /* ── Reddit Cards ── */
-        .reddit-list { display: flex; flex-direction: column; gap: 0.5rem; }
-        .reddit-card {
-            display: block;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 0.9rem 1rem;
-            text-decoration: none;
-            transition: border-color 0.2s, background 0.2s;
-            border-left: 3px solid var(--sent-neutral);
-        }
-        .reddit-card:hover {
-            border-color: var(--border-hover);
-            background: var(--bg-card-hover);
-        }
-        .reddit-card[data-sentiment="buying"] { border-left-color: var(--sent-buying); }
-        .reddit-card[data-sentiment="selling"] { border-left-color: var(--sent-selling); }
-        .reddit-header {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.35rem;
-        }
-        .sentiment-badge {
-            font-size: 0.65rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            padding: 0.15rem 0.5rem;
-            border-radius: 4px;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-        .sentiment-badge.buying { background: rgba(34,197,94,0.15); color: #4ade80; }
-        .sentiment-badge.selling { background: rgba(239,68,68,0.15); color: #f87171; }
-        .sentiment-badge.neutral { background: rgba(107,114,128,0.15); color: #9ca3af; }
-        .reddit-sub {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-        }
-        .reddit-title {
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--text-primary);
-            margin-bottom: 0.3rem;
-            line-height: 1.35;
-        }
-        .reddit-stats {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 0.7rem;
-        }
-        .reddit-stat {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.2rem;
-        }
-
-        /* ── Calculator ── */
-        .calc-wrap {
-            max-width: 480px;
-            margin: 0 auto;
-        }
-        .calc-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 1.5rem;
-        }
-        .calc-title {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 700;
-            font-size: 1.15rem;
-            color: var(--text-primary);
-            margin-bottom: 0.3rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .calc-desc {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 1.25rem;
-            line-height: 1.4;
-        }
-        .calc-field {
-            margin-bottom: 1rem;
-        }
-        .calc-label {
-            display: block;
-            font-size: 0.78rem;
-            color: var(--text-secondary);
-            margin-bottom: 0.35rem;
-            font-weight: 500;
-        }
-        .calc-input {
-            width: 100%;
-            background: var(--bg-deep);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            border-radius: 8px;
-            padding: 0.6rem 0.85rem;
-            font-size: 0.9rem;
-            font-family: inherit;
-            transition: border-color 0.2s;
-        }
-        .calc-input:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-        .btn-calc {
-            width: 100%;
-            padding: 0.7rem;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.88rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-            font-family: inherit;
-            margin-top: 0.25rem;
-        }
-        .btn-calc:hover { background: #d63a52; }
-        .btn-calc:active { transform: scale(0.98); }
-
-        .calc-result {
-            margin-top: 1.25rem;
-            border-top: 1px solid var(--border);
-            padding-top: 1rem;
-            display: none;
-        }
-        .calc-result.show {
-            display: block;
-            animation: result-reveal 0.35s ease;
-        }
-        @keyframes result-reveal {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .calc-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.45rem 0;
-            font-size: 0.82rem;
-        }
-        .calc-row-label { color: var(--text-secondary); }
-        .calc-row-value { font-weight: 600; color: var(--text-primary); }
-        .calc-profit-card {
-            margin-top: 0.5rem;
-            padding: 0.75rem;
-            border-radius: 8px;
-            text-align: center;
-        }
-        .calc-profit-card.profit { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); }
-        .calc-profit-card.loss { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); }
-        .calc-profit-amount {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 700;
-            font-size: 1.4rem;
-        }
-        .calc-profit-label {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            margin-top: 0.15rem;
-        }
-
-        .calc-mexico-warning {
-            margin-top: 1.25rem;
-            display: flex;
-            align-items: flex-start;
-            gap: 0.5rem;
-            padding: 0.75rem;
-            background: rgba(245,158,11,0.08);
-            border: 1px solid rgba(245,158,11,0.2);
-            border-radius: 8px;
-        }
-        .calc-mexico-warning svg { flex-shrink: 0; margin-top: 1px; }
-        .calc-mexico-warning p {
-            font-size: 0.75rem;
-            color: #fbbf24;
-            line-height: 1.4;
-        }
-
         /* ── Empty State ── */
         .empty-state {
             text-align: center;
@@ -1248,27 +963,6 @@
         </div>
     </header>
 
-    <!-- Nav -->
-    <nav class="site-nav">
-        <div class="nav-inner">
-            <button class="tab-btn tab-active" data-tab="matches">
-                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                Matches
-            </button>
-            <button class="tab-btn" data-tab="news">
-                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5"/></svg>
-                News
-            </button>
-            <button class="tab-btn" data-tab="reddit">
-                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-                Reddit
-            </button>
-            <button class="tab-btn" data-tab="calculator">
-                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h8M8 14h3M8 18h3M15 14h1M15 18h1"/></svg>
-                Calculator
-            </button>
-        </div>
-    </nav>
 
     <!-- Stats Bar -->
     <div class="stats-bar" id="statsBar">
@@ -1329,67 +1023,7 @@
             <div id="noMatches" class="empty-state">No matches found.</div>
         </div>
 
-        <!-- News Tab -->
-        <div id="tab-news" class="tab-content">
-            <div id="newsList" class="news-list">
-                <div class="skeleton-card" style="border-radius:10px"><div class="skeleton-body"><div class="skeleton-line w80"></div><div class="skeleton-line w40"></div></div></div>
-                <div class="skeleton-card" style="border-radius:10px"><div class="skeleton-body"><div class="skeleton-line w80"></div><div class="skeleton-line w40"></div></div></div>
-            </div>
-            <div id="noNews" class="empty-state">No World Cup news yet. Data refreshes every 4 hours.</div>
-        </div>
 
-        <!-- Reddit Tab -->
-        <div id="tab-reddit" class="tab-content">
-            <div id="redditList" class="reddit-list">
-                <div class="skeleton-card" style="border-radius:10px"><div class="skeleton-body"><div class="skeleton-line w80"></div><div class="skeleton-line w40"></div></div></div>
-                <div class="skeleton-card" style="border-radius:10px"><div class="skeleton-body"><div class="skeleton-line w80"></div><div class="skeleton-line w40"></div></div></div>
-            </div>
-            <div id="noReddit" class="empty-state">No Reddit posts yet. Data refreshes every 2 hours.</div>
-        </div>
-
-        <!-- Calculator Tab -->
-        <div id="tab-calculator" class="tab-content">
-            <div class="calc-wrap">
-                <div class="calc-card">
-                    <div class="calc-title">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h8M8 14h3M8 18h3M15 14h1M15 18h1"/></svg>
-                        FIFA Exchange Fee Calculator
-                    </div>
-                    <div class="calc-desc">
-                        FIFA charges 15% buyer premium and 15% seller fee on their official ticket exchange.
-                    </div>
-                    <div class="calc-field">
-                        <label class="calc-label">Purchase Price ($)</label>
-                        <input id="calcBuy" type="number" placeholder="e.g. 300" class="calc-input">
-                    </div>
-                    <div class="calc-field">
-                        <label class="calc-label">Sale Price ($)</label>
-                        <input id="calcSell" type="number" placeholder="e.g. 500" class="calc-input">
-                    </div>
-                    <button class="btn-calc" onclick="runCalc()">Calculate</button>
-
-                    <div id="calcResult" class="calc-result">
-                        <div class="calc-row">
-                            <span class="calc-row-label">Total cost (with 15% buyer fee)</span>
-                            <span class="calc-row-value" id="resCost"></span>
-                        </div>
-                        <div class="calc-row">
-                            <span class="calc-row-label">Net revenue (after 15% seller fee)</span>
-                            <span class="calc-row-value" id="resRevenue"></span>
-                        </div>
-                        <div id="profitCard" class="calc-profit-card">
-                            <div class="calc-profit-amount" id="resProfit"></div>
-                            <div class="calc-profit-label">Net Profit · <span id="resRoi"></span> ROI</div>
-                        </div>
-                    </div>
-
-                    <div class="calc-mexico-warning">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
-                        <p><strong>Mexico Venues:</strong> Resale is capped at face value by Mexican law. Estadio Azteca, Estadio BBVA, and Estadio Akron cannot be resold above face value.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
     </main>
 
     <!-- Price Chart Modal -->
@@ -1566,15 +1200,6 @@
     updateCountdown();
     setInterval(updateCountdown, 60000);
 
-    // ─── Tab Switching ───
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
-            btn.classList.add('tab-active');
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-        });
-    });
 
     // ─── Filter Buttons ───
     document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -1832,115 +1457,14 @@
         document.getElementById('statAvgScore').textContent = avg;
     }
 
-    // ─── News ───
-    function renderNews(items) {
-        const list = document.getElementById('newsList');
-        const noMsg = document.getElementById('noNews');
-        if (!items.length) {
-            list.innerHTML = '';
-            noMsg.classList.add('show');
-            return;
-        }
-        noMsg.classList.remove('show');
-        list.innerHTML = items.map(n => `
-            <a href="${n.url}" target="_blank" rel="noopener" class="news-card" data-source="${n.source_name || ''}">
-                <div class="news-title">${n.title}</div>
-                <div class="news-meta">
-                    <span>${n.source_name || 'Unknown'}</span>
-                    <span>·</span>
-                    <span>${relativeTime(n.published_at)}</span>
-                </div>
-                <svg class="news-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17l9.2-9.2M17 17V7.8H7.8"/></svg>
-            </a>
-        `).join('');
-    }
-
-    // ─── Reddit ───
-    function renderReddit(posts) {
-        const list = document.getElementById('redditList');
-        const noMsg = document.getElementById('noReddit');
-        if (!posts.length) {
-            list.innerHTML = '';
-            noMsg.classList.add('show');
-            return;
-        }
-        noMsg.classList.remove('show');
-        list.innerHTML = posts.map(p => {
-            const arrow = p.sentiment === 'buying' ? '↑' : p.sentiment === 'selling' ? '↓' : '–';
-            return `
-                <a href="${p.url}" target="_blank" rel="noopener" class="reddit-card" data-sentiment="${p.sentiment}">
-                    <div class="reddit-header">
-                        <span class="sentiment-badge ${p.sentiment}">${arrow} ${p.sentiment}</span>
-                        <span class="reddit-sub">r/${p.subreddit}</span>
-                    </div>
-                    <div class="reddit-title">${p.title}</div>
-                    <div class="reddit-stats">
-                        <span class="reddit-stat">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-                            ${p.score}
-                        </span>
-                        <span class="reddit-stat">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                            ${p.num_comments}
-                        </span>
-                        <span>${relativeTime(p.published_at)}</span>
-                    </div>
-                </a>`;
-        }).join('');
-    }
-
-    // ─── Calculator ───
-    async function runCalc() {
-        const buy = parseFloat(document.getElementById('calcBuy').value);
-        const sell = parseFloat(document.getElementById('calcSell').value);
-        if (isNaN(buy) || isNaN(sell)) return;
-
-        try {
-            const res = await fetch('/api/analysis/fee', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ purchase_price: buy, sale_price: sell }),
-            });
-            const data = await res.json();
-
-            document.getElementById('resCost').textContent = '$' + data.total_cost.toFixed(2);
-            document.getElementById('resRevenue').textContent = '$' + data.net_revenue.toFixed(2);
-
-            const profitEl = document.getElementById('resProfit');
-            profitEl.textContent = (data.net_profit >= 0 ? '+$' : '-$') + Math.abs(data.net_profit).toFixed(2);
-
-            const roiEl = document.getElementById('resRoi');
-            roiEl.textContent = data.roi_percent.toFixed(1) + '%';
-
-            const profitCard = document.getElementById('profitCard');
-            profitCard.className = 'calc-profit-card ' + (data.net_profit >= 0 ? 'profit' : 'loss');
-            profitEl.style.color = data.net_profit >= 0 ? '#4ade80' : '#f87171';
-
-            const resultEl = document.getElementById('calcResult');
-            resultEl.classList.remove('show');
-            // Force reflow for re-animation
-            void resultEl.offsetWidth;
-            resultEl.classList.add('show');
-            resultEl.style.display = 'block';
-        } catch (e) {
-            console.error('Calc failed:', e);
-        }
-    }
-
     // ─── Data Loading ───
     async function loadData() {
         try {
-            const [matchRes, newsRes, redditRes] = await Promise.all([
-                fetch('/api/analysis/scores'),
-                fetch('/api/news'),
-                fetch('/api/reddit'),
-            ]);
-            allMatches = await matchRes.json();
+            const res = await fetch('/api/analysis/scores');
+            allMatches = await res.json();
             updateStats();
             updateFilterCounts();
             filterMatches();
-            renderNews(await newsRes.json());
-            renderReddit(await redditRes.json());
             document.getElementById('lastUpdate').textContent = 'Updated ' + new Date().toLocaleTimeString();
         } catch (e) {
             console.error('Failed to load data:', e);

@@ -6,14 +6,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
 from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
 
 import db.database as db
-from collector import fixtures, reddit, news_rss, seatgeek
+from collector import fixtures, seatgeek
 from collector import stubhub, tickpick
-from analysis.value import score_all_matches, score_match, calculate_fee
+from analysis.value import score_all_matches, score_match
 from config import RESALE_POLL_HOURS
 
 log = logging.getLogger(__name__)
@@ -24,16 +23,6 @@ def _seed_fixtures():
     n = fixtures.collect()
     score_all_matches()
     log.info(f"[startup] seeded {n} fixtures")
-
-
-def _collect_news():
-    n = news_rss.collect()
-    log.info(f"[scheduler] news: +{n} new items")
-
-
-def _collect_reddit():
-    n = reddit.collect()
-    log.info(f"[scheduler] reddit: +{n} new posts")
 
 
 def _collect_resale():
@@ -54,8 +43,6 @@ def _collect_tickpick():
 
 
 def _run_all():
-    _collect_news()
-    _collect_reddit()
     _collect_resale()
     _collect_stubhub()
     _collect_tickpick()
@@ -67,14 +54,12 @@ async def lifespan(app: FastAPI):
     _seed_fixtures()
 
     scheduler = BackgroundScheduler(daemon=True)
-    scheduler.add_job(_collect_news, trigger="interval", hours=4, id="news", replace_existing=True)
-    scheduler.add_job(_collect_reddit, trigger="interval", hours=2, id="reddit", replace_existing=True)
     scheduler.add_job(_collect_resale, trigger="interval", hours=RESALE_POLL_HOURS, id="resale", replace_existing=True)
     scheduler.add_job(_collect_stubhub, trigger="interval", hours=RESALE_POLL_HOURS, id="stubhub", replace_existing=True)
     scheduler.add_job(_collect_tickpick, trigger="interval", hours=RESALE_POLL_HOURS, id="tickpick", replace_existing=True)
 
     scheduler.start()
-    log.info(f"[scheduler] Started — news/4h, reddit/2h, resale/{RESALE_POLL_HOURS}h")
+    log.info(f"[scheduler] Started — resale/{RESALE_POLL_HOURS}h, stubhub/{RESALE_POLL_HOURS}h, tickpick/{RESALE_POLL_HOURS}h")
 
     # Immediate collection on startup
     import threading
@@ -106,16 +91,6 @@ def get_matches(round: str | None = Query(None), country: str | None = Query(Non
     return matches
 
 
-@app.get("/api/news")
-def get_news(limit: int = Query(50)):
-    return [dict(n) for n in db.get_news(limit)]
-
-
-@app.get("/api/reddit")
-def get_reddit(limit: int = Query(50)):
-    return [dict(r) for r in db.get_reddit_posts(limit)]
-
-
 @app.get("/api/analysis/scores")
 def get_scores():
     matches = [dict(m) for m in db.get_all_matches()]
@@ -126,16 +101,6 @@ def get_scores():
     for m in matches:
         m["platform_prices"] = all_platform_prices.get(m["id"], [])
     return sorted(matches, key=lambda m: m["value_score"], reverse=True)
-
-
-class FeeCalcRequest(BaseModel):
-    purchase_price: float
-    sale_price: float
-
-
-@app.post("/api/analysis/fee")
-def calc_fee(body: FeeCalcRequest):
-    return calculate_fee(body.purchase_price, body.sale_price)
 
 
 @app.get("/api/prices/{match_id}")
