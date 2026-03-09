@@ -224,3 +224,60 @@ def get_matches_with_seatgeek_id() -> list[sqlite3.Row]:
         return conn.execute(
             "SELECT id, seatgeek_id FROM matches WHERE seatgeek_id IS NOT NULL"
         ).fetchall()
+
+
+# ---------------------------------------------------------------------------
+# Platform Prices (multi-platform comparison)
+# ---------------------------------------------------------------------------
+
+def upsert_platform_price(
+    match_id: int,
+    platform: str,
+    lowest: int | None,
+    median: int | None,
+    highest: int | None,
+    listing_count: int,
+    listing_url: str | None,
+    is_transferable: str = "unknown",
+) -> None:
+    with get_conn() as conn:
+        conn.execute(
+            """INSERT INTO platform_prices
+                (match_id, platform, lowest_price, median_price, highest_price,
+                 listing_count, listing_url, is_transferable)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (match_id, platform, lowest, median, highest,
+             listing_count, listing_url, is_transferable),
+        )
+
+
+def get_latest_platform_prices(match_id: int) -> list[sqlite3.Row]:
+    """Get the most recent price for each platform for a given match."""
+    with get_conn() as conn:
+        return conn.execute(
+            """SELECT * FROM platform_prices
+            WHERE id IN (
+                SELECT MAX(id) FROM platform_prices
+                WHERE match_id = ?
+                GROUP BY platform
+            )
+            ORDER BY platform""",
+            (match_id,),
+        ).fetchall()
+
+
+def get_all_latest_platform_prices() -> dict[int, list[dict]]:
+    """Get latest prices per platform for ALL matches. Returns {match_id: [prices]}."""
+    with get_conn() as conn:
+        rows = conn.execute(
+            """SELECT * FROM platform_prices
+            WHERE id IN (
+                SELECT MAX(id) FROM platform_prices GROUP BY match_id, platform
+            )
+            ORDER BY match_id, platform"""
+        ).fetchall()
+    result = {}
+    for row in rows:
+        d = dict(row)
+        result.setdefault(d["match_id"], []).append(d)
+    return result

@@ -40,6 +40,21 @@ CREATE TABLE IF NOT EXISTS price_snapshots (
 );
 CREATE INDEX IF NOT EXISTS idx_snapshots_match ON price_snapshots(match_id, fetched_at);
 
+CREATE TABLE IF NOT EXISTS platform_prices (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    match_id INTEGER NOT NULL,
+    platform TEXT NOT NULL,
+    lowest_price INTEGER,
+    median_price INTEGER,
+    highest_price INTEGER,
+    listing_count INTEGER DEFAULT 0,
+    listing_url TEXT,
+    is_transferable TEXT DEFAULT 'unknown',
+    fetched_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (match_id) REFERENCES matches(id)
+);
+CREATE INDEX IF NOT EXISTS idx_platform_prices_match ON platform_prices(match_id, platform, fetched_at);
+
 CREATE TABLE IF NOT EXISTS news_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     source_name TEXT NOT NULL,
