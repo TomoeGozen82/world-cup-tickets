@@ -1010,6 +1010,68 @@
             .price-row { grid-template-columns: repeat(3, 1fr); gap: 0.35rem; }
         }
 
+        /* ── Multi-Platform Comparison ── */
+        .platform-comparison {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+        .platform-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.45rem 0.65rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.04);
+            transition: border-color 0.2s;
+        }
+        .platform-row.cheapest {
+            border-color: rgba(34,197,94,0.3);
+            background: rgba(34,197,94,0.06);
+        }
+        .platform-name {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        .platform-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .best-price-tag {
+            font-size: 0.58rem;
+            font-weight: 700;
+            color: #4ade80;
+            background: rgba(34,197,94,0.15);
+            padding: 0.08rem 0.35rem;
+            border-radius: 3px;
+            letter-spacing: 0.04em;
+        }
+        .platform-prices {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .platform-price {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: var(--gold);
+        }
+        .platform-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+        .platform-link:hover { color: var(--gold); }
+
         /* ── Price Chart Modal ── */
         .chart-overlay {
             position: fixed;
@@ -1572,9 +1634,18 @@
     }
 
     // ─── Resale Section ───
+    // ─── Resale Section ───
     function renderResaleSection(m) {
-        if (!m.resale_lowest && !m.resale_median) return '';
+        const platforms = m.platform_prices || [];
 
+        if (!platforms.length && !m.resale_lowest && !m.resale_median) return '';
+
+        // If we have platform data, show multi-platform view
+        if (platforms.length > 0) {
+            return renderMultiPlatformPrices(m, platforms);
+        }
+
+        // Fallback to legacy single-source
         const face = m.face_value_cat3 || 100;
         const median = m.resale_median || 0;
         const markupPct = Math.round(((median - face) / face) * 100);
@@ -1588,10 +1659,7 @@
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gold-dim)" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
                         Resale Market
                     </span>
-                    <span>
-                        <span class="markup-badge ${markupClass}">${markupArrow} ${Math.abs(markupPct)}% vs face</span>
-                        ${m.listing_count ? `<span class="resale-listings"> · ${m.listing_count} listings</span>` : ''}
-                    </span>
+                    <span class="markup-badge ${markupClass}">${markupArrow} ${Math.abs(markupPct)}% vs face</span>
                 </div>
                 <div class="resale-row">
                     <div class="resale-cell">
@@ -1606,6 +1674,61 @@
                         <div class="price-label">High</div>
                         <div class="price-value">$${m.resale_highest || '—'}</div>
                     </div>
+                </div>
+            </div>`;
+    }
+
+    const PLATFORM_NAMES = {
+        vividseats: 'Vivid Seats',
+        stubhub: 'StubHub',
+        tickpick: 'TickPick',
+    };
+
+    const PLATFORM_COLORS = {
+        vividseats: '#a855f7',
+        stubhub: '#3b82f6',
+        tickpick: '#22c55e',
+    };
+
+    function renderMultiPlatformPrices(m, platforms) {
+        const withPrices = platforms.filter(p => p.lowest_price);
+        const cheapest = withPrices.length
+            ? withPrices.reduce((a, b) => (a.lowest_price < b.lowest_price ? a : b))
+            : null;
+
+        const rows = platforms.map(p => {
+            const isCheapest = cheapest && p.platform === cheapest.platform;
+            const transferIcon = p.is_transferable === 'yes'
+                ? '<span title="Transferable" style="color:#4ade80">&#10003;</span>'
+                : p.is_transferable === 'no'
+                ? '<span title="Non-transferable" style="color:#f87171">&#10007;</span>'
+                : '';
+
+            return `
+                <div class="platform-row${isCheapest ? ' cheapest' : ''}">
+                    <div class="platform-name">
+                        <span class="platform-dot" style="background:${PLATFORM_COLORS[p.platform] || '#6b7280'}"></span>
+                        ${PLATFORM_NAMES[p.platform] || p.platform}
+                        ${transferIcon}
+                        ${isCheapest ? '<span class="best-price-tag">BEST</span>' : ''}
+                    </div>
+                    <div class="platform-prices">
+                        <span class="platform-price">$${p.lowest_price || '—'}</span>
+                        ${p.listing_url ? `<a href="${p.listing_url}" target="_blank" rel="noopener" class="platform-link">&#8594;</a>` : ''}
+                    </div>
+                </div>`;
+        }).join('');
+
+        return `
+            <div class="resale-section">
+                <div class="resale-header">
+                    <span class="resale-label">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gold-dim)" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                        Resale Comparison
+                    </span>
+                </div>
+                <div class="platform-comparison">
+                    ${rows}
                 </div>
             </div>`;
     }
