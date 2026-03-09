@@ -316,6 +316,26 @@
             border-color: var(--accent);
         }
 
+        /* ── Resale Toggle ── */
+        .resale-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            cursor: pointer;
+            user-select: none;
+        }
+        .resale-toggle input[type="checkbox"] {
+            accent-color: var(--gold);
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+        }
+        .resale-toggle-label {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
         /* ── Match Grid ── */
         .match-grid {
             display: grid;
@@ -1295,6 +1315,10 @@
                     <option value="Canada">Canada</option>
                     <option value="Mexico">Mexico</option>
                 </select>
+                <label class="resale-toggle">
+                    <input type="checkbox" id="resaleOnly" checked onchange="filterMatches()">
+                    <span class="resale-toggle-label">Resale only</span>
+                </label>
             </div>
 
             <div id="matchGrid" class="match-grid">
@@ -1752,6 +1776,11 @@
         }
         if (country) {
             filtered = filtered.filter(m => m.country === country);
+        }
+        if (document.getElementById('resaleOnly').checked) {
+            filtered = filtered.filter(m =>
+                (m.platform_prices && m.platform_prices.length > 0) || m.resale_lowest || m.resale_median
+            );
         }
 
         // Sort
