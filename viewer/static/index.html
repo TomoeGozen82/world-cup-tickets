@@ -517,30 +517,85 @@
         }
 
         /* Prices */
-        .price-row {
+        .platform-cards {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 0.5rem;
+            gap: 0.45rem;
             margin-bottom: 0.65rem;
         }
-        .price-cell {
-            text-align: center;
-            padding: 0.4rem 0;
+        .platform-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.55rem 0.3rem;
             background: rgba(255,255,255,0.03);
-            border-radius: 6px;
-            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.06);
+            text-decoration: none;
+            transition: border-color 0.2s, background 0.2s, transform 0.15s;
+            cursor: pointer;
         }
-        .price-label {
-            font-size: 0.6rem;
+        .platform-card:hover {
+            border-color: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.06);
+            transform: translateY(-1px);
+        }
+        .platform-card.cheapest {
+            border-color: rgba(34,197,94,0.35);
+            background: rgba(34,197,94,0.06);
+        }
+        .platform-card.cheapest:hover {
+            border-color: rgba(34,197,94,0.55);
+            background: rgba(34,197,94,0.1);
+        }
+        .platform-card.no-listing {
+            opacity: 0.4;
+            cursor: default;
+        }
+        .platform-card.no-listing:hover {
+            border-color: rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.03);
+            transform: none;
+        }
+        .platform-card-name {
+            font-size: 0.62rem;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.04em;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
         }
-        .price-value {
+        .platform-card-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .platform-card-price {
             font-family: 'Outfit', sans-serif;
             font-weight: 600;
-            font-size: 0.85rem;
-            color: var(--text-primary);
+            font-size: 0.9rem;
+            color: var(--gold);
+        }
+        .platform-card.no-listing .platform-card-price {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+        .platform-card-best {
+            font-size: 0.52rem;
+            font-weight: 700;
+            color: #4ade80;
+            background: rgba(34,197,94,0.15);
+            padding: 0.05rem 0.3rem;
+            border-radius: 3px;
+            letter-spacing: 0.04em;
+        }
+        .platform-card-transfer {
+            font-size: 0.55rem;
+            color: #4ade80;
         }
 
         /* Mexico warning */
@@ -623,24 +678,6 @@
         .resale-listings {
             font-size: 0.65rem;
             color: var(--text-muted);
-        }
-        .resale-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.5rem;
-        }
-        .resale-cell {
-            text-align: center;
-            padding: 0.4rem 0;
-            background: rgba(245,197,24,0.04);
-            border-radius: 6px;
-            border: 1px solid rgba(245,197,24,0.08);
-        }
-        .resale-cell .price-label {
-            color: var(--gold-dim);
-        }
-        .resale-cell .price-value {
-            color: var(--gold);
         }
         .markup-badge {
             display: inline-flex;
@@ -742,70 +779,11 @@
             .stats-bar { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
             .site-header { padding: 1rem; }
             .main-content { padding: 1rem; }
-            .price-row { grid-template-columns: repeat(3, 1fr); gap: 0.35rem; }
+            .platform-cards { gap: 0.3rem; }
         }
 
         /* ── Multi-Platform Comparison ── */
-        .platform-comparison {
-            display: flex;
-            flex-direction: column;
-            gap: 0.35rem;
-        }
-        .platform-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.45rem 0.65rem;
-            background: rgba(255,255,255,0.03);
-            border-radius: 6px;
-            border: 1px solid rgba(255,255,255,0.04);
-            transition: border-color 0.2s;
-        }
-        .platform-row.cheapest {
-            border-color: rgba(34,197,94,0.3);
-            background: rgba(34,197,94,0.06);
-        }
-        .platform-name {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.78rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-        }
-        .platform-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-        .best-price-tag {
-            font-size: 0.58rem;
-            font-weight: 700;
-            color: #4ade80;
-            background: rgba(34,197,94,0.15);
-            padding: 0.08rem 0.35rem;
-            border-radius: 3px;
-            letter-spacing: 0.04em;
-        }
-        .platform-prices {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .platform-price {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 600;
-            font-size: 0.88rem;
-            color: var(--gold);
-        }
-        .platform-link {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 0.85rem;
-            transition: color 0.2s;
-        }
-        .platform-link:hover { color: var(--gold); }
+        /* (old platform-row styles removed — replaced by platform-cards) */
 
         /* ── Price Chart Modal ── */
         .chart-overlay {
@@ -870,6 +848,26 @@
             width: 100%;
             height: 100%;
         }
+        .chart-tooltip {
+            position: absolute;
+            pointer-events: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.45rem 0.65rem;
+            font-size: 0.72rem;
+            color: var(--text-primary);
+            white-space: nowrap;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+        .chart-tooltip.visible { opacity: 1; }
+        .chart-tooltip-date { color: var(--text-muted); font-size: 0.65rem; margin-bottom: 0.2rem; }
+        .chart-tooltip-row { display: flex; align-items: center; gap: 0.35rem; }
+        .chart-tooltip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .chart-tooltip-val { font-family: 'Outfit', sans-serif; font-weight: 600; }
         .chart-empty {
             text-align: center;
             padding: 2.5rem 1rem;
@@ -1252,81 +1250,20 @@
                         </span>
                     </div>
 
-                    <div class="price-row">
-                        <div class="price-cell">
-                            <div class="price-label">Cat 3</div>
-                            <div class="price-value">$${m.face_value_cat3 || '—'}</div>
-                        </div>
-                        <div class="price-cell">
-                            <div class="price-label">Cat 2</div>
-                            <div class="price-value">$${m.face_value_cat2 || '—'}</div>
-                        </div>
-                        <div class="price-cell">
-                            <div class="price-label">Cat 1</div>
-                            <div class="price-value">$${m.face_value_cat1 || '—'}</div>
-                        </div>
-                    </div>
-
-                    ${renderResaleSection(m)}
+                    ${renderPlatformCards(m)}
 
                     ${mexicoAlert}
 
                     <div class="card-actions">
                         <a href="https://www.fifa.com/fifaplus/en/tournaments/mens/worldcup/canadamexicousa2026/tickets"
-                           target="_blank" rel="noopener" class="btn-buy">Buy Tickets</a>
+                           target="_blank" rel="noopener" class="btn-buy">FIFA Tickets</a>
                         ${m.resale_median ? `<button class="btn-chart" onclick="event.stopPropagation();openChart(${m.id},'${(m.home_team||'TBD')} vs ${(m.away_team||'TBD')}')">Chart</button>` : ''}
-                        ${m.seatgeek_url ? `<a href="${m.seatgeek_url}" target="_blank" rel="noopener" class="btn-details">Resale</a>` : ''}
-                        ${m.external_id ? `<a href="https://www.thesportsdb.com/event/${m.external_id}" target="_blank" rel="noopener" class="btn-details">Details</a>` : ''}
                     </div>
                 </div>
             </div>`;
     }
 
-    // ─── Resale Section ───
-    // ─── Resale Section ───
-    function renderResaleSection(m) {
-        const platforms = m.platform_prices || [];
-
-        if (!platforms.length && !m.resale_lowest && !m.resale_median) return '';
-
-        // If we have platform data, show multi-platform view
-        if (platforms.length > 0) {
-            return renderMultiPlatformPrices(m, platforms);
-        }
-
-        // Fallback to legacy single-source
-        const face = m.face_value_cat3 || 100;
-        const median = m.resale_median || 0;
-        const markupPct = Math.round(((median - face) / face) * 100);
-        const markupClass = markupPct >= 0 ? 'up' : 'down';
-        const markupArrow = markupPct >= 0 ? '↑' : '↓';
-
-        return `
-            <div class="resale-section">
-                <div class="resale-header">
-                    <span class="resale-label">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gold-dim)" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-                        Resale Market
-                    </span>
-                    <span class="markup-badge ${markupClass}">${markupArrow} ${Math.abs(markupPct)}% vs face</span>
-                </div>
-                <div class="resale-row">
-                    <div class="resale-cell">
-                        <div class="price-label">Low</div>
-                        <div class="price-value">$${m.resale_lowest || '—'}</div>
-                    </div>
-                    <div class="resale-cell">
-                        <div class="price-label">Median</div>
-                        <div class="price-value">$${m.resale_median || '—'}</div>
-                    </div>
-                    <div class="resale-cell">
-                        <div class="price-label">High</div>
-                        <div class="price-value">$${m.resale_highest || '—'}</div>
-                    </div>
-                </div>
-            </div>`;
-    }
-
+    // ─── Platform Buy Cards ───
     const PLATFORM_NAMES = {
         vividseats: 'Vivid Seats',
         stubhub: 'StubHub',
@@ -1339,47 +1276,49 @@
         tickpick: '#22c55e',
     };
 
-    function renderMultiPlatformPrices(m, platforms) {
+    const PLATFORM_ORDER = ['vividseats', 'stubhub', 'tickpick'];
+
+    function renderPlatformCards(m) {
+        const platforms = m.platform_prices || [];
+        const byKey = {};
+        platforms.forEach(p => { byKey[p.platform] = p; });
+
         const withPrices = platforms.filter(p => p.lowest_price);
         const cheapest = withPrices.length
             ? withPrices.reduce((a, b) => (a.lowest_price < b.lowest_price ? a : b))
             : null;
 
-        const rows = platforms.map(p => {
-            const isCheapest = cheapest && p.platform === cheapest.platform;
-            const transferIcon = p.is_transferable === 'yes'
-                ? '<span title="Transferable" style="color:#4ade80">&#10003;</span>'
-                : p.is_transferable === 'no'
-                ? '<span title="Non-transferable" style="color:#f87171">&#10007;</span>'
-                : '';
+        const cards = PLATFORM_ORDER.map(key => {
+            const p = byKey[key];
+            const hasListing = p && p.lowest_price && p.listing_url;
+            const isCheapest = hasListing && cheapest && key === cheapest.platform;
+            const tag = hasListing ? (p.is_transferable === 'yes' ? 'open' : '') : 'no-listing';
+
+            if (!hasListing) {
+                return `
+                    <div class="platform-card no-listing">
+                        <div class="platform-card-name">
+                            <span class="platform-card-dot" style="background:${PLATFORM_COLORS[key]}"></span>
+                            ${PLATFORM_NAMES[key]}
+                        </div>
+                        <div class="platform-card-price">No listing</div>
+                    </div>`;
+            }
 
             return `
-                <div class="platform-row${isCheapest ? ' cheapest' : ''}">
-                    <div class="platform-name">
-                        <span class="platform-dot" style="background:${PLATFORM_COLORS[p.platform] || '#6b7280'}"></span>
-                        ${PLATFORM_NAMES[p.platform] || p.platform}
-                        ${transferIcon}
-                        ${isCheapest ? '<span class="best-price-tag">BEST</span>' : ''}
+                <a href="${p.listing_url}" target="_blank" rel="noopener"
+                   class="platform-card${isCheapest ? ' cheapest' : ''}">
+                    <div class="platform-card-name">
+                        <span class="platform-card-dot" style="background:${PLATFORM_COLORS[key]}"></span>
+                        ${PLATFORM_NAMES[key]}
                     </div>
-                    <div class="platform-prices">
-                        <span class="platform-price">$${p.lowest_price || '—'}</span>
-                        ${p.listing_url ? `<a href="${p.listing_url}" target="_blank" rel="noopener" class="platform-link">&#8594;</a>` : ''}
-                    </div>
-                </div>`;
+                    <div class="platform-card-price">$${p.lowest_price.toLocaleString()}</div>
+                    ${isCheapest && withPrices.length > 1 ? '<span class="platform-card-best">BEST</span>' : ''}
+                    ${p.is_transferable === 'yes' ? '<span class="platform-card-transfer">Transferable</span>' : ''}
+                </a>`;
         }).join('');
 
-        return `
-            <div class="resale-section">
-                <div class="resale-header">
-                    <span class="resale-label">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gold-dim)" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-                        Resale Comparison
-                    </span>
-                </div>
-                <div class="platform-comparison">
-                    ${rows}
-                </div>
-            </div>`;
+        return `<div class="platform-cards">${cards}</div>`;
     }
 
     // ─── Filter & Sort ───
@@ -1510,7 +1449,7 @@
     }
 
     function renderChart(snapshots, faceValue) {
-        const W = 580, H = 260, PAD = { top: 20, right: 20, bottom: 35, left: 50 };
+        const W = 580, H = 260, PAD = { top: 20, right: 20, bottom: 35, left: 55 };
         const plotW = W - PAD.left - PAD.right;
         const plotH = H - PAD.top - PAD.bottom;
 
@@ -1520,25 +1459,42 @@
         const med = snapshots.map(s => s.median_price || 0);
         const high = snapshots.map(s => s.highest_price || 0);
 
-        const allVals = [...low, ...med, ...high, faceValue].filter(v => v > 0);
-        const minV = Math.floor(Math.min(...allVals) * 0.85);
-        const maxV = Math.ceil(Math.max(...allVals) * 1.1);
+        // Scale Y-axis to low + median range only (highest is often 50-100x
+        // larger and squishes the useful lines flat at the bottom)
+        const primaryVals = [...low, ...med, faceValue].filter(v => v > 0);
+        const minV = Math.floor(Math.min(...primaryVals) * 0.85);
+        const maxV = Math.ceil(Math.max(...primaryVals) * 1.15);
         const rangeV = maxV - minV || 1;
 
         const xScale = (i) => PAD.left + (i / Math.max(snapshots.length - 1, 1)) * plotW;
         const yScale = (v) => PAD.top + plotH - ((v - minV) / rangeV) * plotH;
+        // Clamp y so highest line stays visible at top edge instead of flying off
+        const yScaleClamped = (v) => Math.max(PAD.top - 4, yScale(v));
 
-        function polyline(data, color) {
-            const pts = data.map((v, i) => `${xScale(i).toFixed(1)},${yScale(v).toFixed(1)}`).join(' ');
+        function polyline(data, color, clamp) {
+            const yFn = clamp ? yScaleClamped : yScale;
+            const pts = data.map((v, i) => `${xScale(i).toFixed(1)},${yFn(v).toFixed(1)}`).join(' ');
             return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
         }
 
-        function dots(data, color) {
-            if (data.length > 20) return ''; // too many points for dots
+        function dots(data, color, clamp) {
+            if (data.length > 20) return '';
+            const yFn = clamp ? yScaleClamped : yScale;
             return data.map((v, i) =>
-                `<circle cx="${xScale(i).toFixed(1)}" cy="${yScale(v).toFixed(1)}" r="3" fill="${color}" stroke="var(--bg-card)" stroke-width="1.5"/>`
+                `<circle cx="${xScale(i).toFixed(1)}" cy="${yFn(v).toFixed(1)}" r="3.5" fill="${color}" stroke="var(--bg-card)" stroke-width="1.5"/>`
             ).join('');
         }
+
+        // Invisible hover hit-areas for each data point index
+        let hoverZones = '';
+        const colW = plotW / Math.max(snapshots.length - 1, 1);
+        for (let i = 0; i < snapshots.length; i++) {
+            const x = xScale(i);
+            hoverZones += `<rect x="${(x - colW / 2).toFixed(1)}" y="${PAD.top}" width="${colW.toFixed(1)}" height="${plotH}" fill="transparent" data-idx="${i}" class="chart-hover-zone"/>`;
+        }
+
+        // Vertical crosshair (hidden by default)
+        const crosshair = `<line id="chartCrosshair" x1="0" y1="${PAD.top}" x2="0" y2="${PAD.top + plotH}" stroke="rgba(255,255,255,0.15)" stroke-width="1" style="display:none"/>`;
 
         // Grid lines
         const gridCount = 5;
@@ -1547,7 +1503,7 @@
             const val = minV + (rangeV * i / gridCount);
             const y = yScale(val);
             gridLines += `<line x1="${PAD.left}" y1="${y.toFixed(1)}" x2="${W - PAD.right}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
-            gridLines += `<text x="${PAD.left - 8}" y="${(y + 4).toFixed(1)}" text-anchor="end" fill="#55556a" font-size="10" font-family="Outfit,sans-serif">$${Math.round(val)}</text>`;
+            gridLines += `<text x="${PAD.left - 8}" y="${(y + 4).toFixed(1)}" text-anchor="end" fill="#55556a" font-size="10" font-family="Outfit,sans-serif">$${Math.round(val).toLocaleString()}</text>`;
         }
 
         // Face value reference line
@@ -1573,14 +1529,17 @@
                 <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
                     ${gridLines}
                     ${faceLine}
-                    ${polyline(high, '#a855f7')}
-                    ${polyline(med, '#f5c518')}
-                    ${polyline(low, '#3b82f6')}
-                    ${dots(high, '#a855f7')}
-                    ${dots(med, '#f5c518')}
-                    ${dots(low, '#3b82f6')}
+                    ${crosshair}
+                    ${polyline(high, '#a855f7', true)}
+                    ${polyline(med, '#f5c518', false)}
+                    ${polyline(low, '#3b82f6', false)}
+                    ${dots(high, '#a855f7', true)}
+                    ${dots(med, '#f5c518', false)}
+                    ${dots(low, '#3b82f6', false)}
                     ${dateLabels}
+                    ${hoverZones}
                 </svg>
+                <div class="chart-tooltip" id="chartTooltip"></div>
             </div>
             <div class="chart-legend">
                 <span class="chart-legend-item"><span class="chart-legend-dot" style="background:#3b82f6"></span>Lowest</span>
@@ -1590,11 +1549,11 @@
             </div>
             <div class="chart-stats">
                 <div class="chart-stat">
-                    <div class="chart-stat-value">$${low[low.length-1] || '—'}</div>
+                    <div class="chart-stat-value">$${(low[low.length-1] || 0).toLocaleString() || '—'}</div>
                     <div class="chart-stat-label">Current Low</div>
                 </div>
                 <div class="chart-stat">
-                    <div class="chart-stat-value">$${med[med.length-1] || '—'}</div>
+                    <div class="chart-stat-value">$${(med[med.length-1] || 0).toLocaleString() || '—'}</div>
                     <div class="chart-stat-label">Current Median</div>
                 </div>
                 <div class="chart-stat">
@@ -1605,6 +1564,53 @@
         `;
 
         document.getElementById('chartBody').innerHTML = svg;
+
+        // Wire up hover tooltips
+        const wrap = document.querySelector('.chart-svg-wrap');
+        const tip = document.getElementById('chartTooltip');
+        const crosshairEl = document.getElementById('chartCrosshair');
+        const svgEl = wrap.querySelector('svg');
+
+        wrap.addEventListener('mouseleave', () => {
+            tip.classList.remove('visible');
+            crosshairEl.style.display = 'none';
+        });
+
+        wrap.querySelectorAll('.chart-hover-zone').forEach(zone => {
+            zone.addEventListener('mouseenter', (e) => {
+                const idx = parseInt(zone.dataset.idx);
+                const dateStr = dates[idx] || '';
+                const dateFmt = dateStr.slice(0, 16).replace('T', ' '); // YYYY-MM-DD HH:MM
+
+                // Show crosshair
+                const cx = xScale(idx);
+                crosshairEl.setAttribute('x1', cx.toFixed(1));
+                crosshairEl.setAttribute('x2', cx.toFixed(1));
+                crosshairEl.style.display = '';
+
+                // Build tooltip
+                tip.innerHTML = `
+                    <div class="chart-tooltip-date">${dateFmt}</div>
+                    <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#3b82f6"></span>Lowest: <span class="chart-tooltip-val">$${(low[idx] || 0).toLocaleString()}</span></div>
+                    <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#f5c518"></span>Median: <span class="chart-tooltip-val">$${(med[idx] || 0).toLocaleString()}</span></div>
+                    <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#a855f7"></span>Highest: <span class="chart-tooltip-val">$${(high[idx] || 0).toLocaleString()}</span></div>
+                `;
+                tip.classList.add('visible');
+
+                // Position tooltip relative to the svg-wrap container
+                const wrapRect = wrap.getBoundingClientRect();
+                const svgRect = svgEl.getBoundingClientRect();
+                const scaleX = svgRect.width / W;
+                const tipX = (cx * scaleX) + (svgRect.left - wrapRect.left);
+                const tipW = tip.offsetWidth;
+                // Flip side if too close to right edge
+                const left = tipX + tipW + 12 > wrapRect.width
+                    ? tipX - tipW - 12
+                    : tipX + 12;
+                tip.style.left = left + 'px';
+                tip.style.top = '20px';
+            });
+        });
     }
 
     // Close chart on Escape

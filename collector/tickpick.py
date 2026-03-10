@@ -1,9 +1,13 @@
-"""Scrape resale ticket prices from TickPick (no buyer fees)."""
+"""Scrape resale ticket prices from TickPick (no buyer fees).
+
+Strategy: the category page at /world-cup-soccer-tickets/ embeds JSON-LD
+SportsEvent blocks with lowPrice/highPrice and buy URLs for every listed
+match.  One GET fetches all events — no per-event crawling needed.
+"""
 
 import json
 import logging
 import re
-import time
 
 import httpx
 
@@ -21,11 +25,12 @@ HEADERS = {
     "Accept-Language": "en-US,en;q=0.9",
 }
 
-SEARCH_URL = "https://www.tickpick.com/search?q=FIFA+World+Cup+2026"
+CATEGORY_URL = "https://www.tickpick.com/world-cup-soccer-tickets/"
 
 
-def _parse_event_data(html: str) -> dict | None:
-    """Extract event pricing from TickPick page."""
+def _parse_all_events(html: str) -> list[dict]:
+    """Extract all SportsEvent JSON-LD blocks from the category page."""
+    events = []
     for m in re.finditer(
         r'<script[^>]*application/ld\+json[^>]*>(.*?)</script>',
         html, re.DOTALL,
@@ -34,37 +39,23 @@ def _parse_event_data(html: str) -> dict | None:
             data = json.loads(m.group(1))
             if isinstance(data, list):
                 data = data[0]
+            if data.get("@type") != "SportsEvent":
+                continue
             offers = data.get("offers", {})
-            if offers.get("lowPrice"):
-                return {
-                    "lowest": int(float(offers["lowPrice"])),
-                    "highest": int(float(offers.get("highPrice", 0))) or None,
-                    "name": data.get("name", ""),
-                    "start_date": (data.get("startDate") or "")[:10],
-                    "venue": (data.get("location", {}).get("name", "")),
-                }
+            low = offers.get("lowPrice")
+            if not low:
+                continue
+            events.append({
+                "lowest": int(float(low)),
+                "highest": int(float(offers.get("highPrice", 0))) or None,
+                "name": data.get("name", ""),
+                "start_date": (data.get("startDate") or "")[:10],
+                "venue": (data.get("location", {}).get("name", "")),
+                "url": offers.get("url") or data.get("url", ""),
+            })
         except (json.JSONDecodeError, ValueError, TypeError):
             continue
-    return None
-
-
-def _discover_event_urls(client: httpx.Client) -> list[str]:
-    """Find TickPick event URLs for World Cup matches."""
-    try:
-        resp = client.get(SEARCH_URL, timeout=20)
-        resp.raise_for_status()
-    except Exception as e:
-        log.error(f"[tickpick] Search failed: {e}")
-        return []
-
-    urls = set()
-    for m in re.finditer(r'href="(https://www\.tickpick\.com/[^"]*(?:world-cup|fifa)[^"]*)"', resp.text, re.IGNORECASE):
-        urls.add(m.group(1))
-    for m in re.finditer(r'href="(/buy/[^"]*)"', resp.text):
-        urls.add(f"https://www.tickpick.com{m.group(1)}")
-
-    log.info(f"[tickpick] Found {len(urls)} event URLs")
-    return list(urls)
+    return events
 
 
 def _match_event_to_db(event: dict, db_matches: list[dict]) -> dict | None:
@@ -86,26 +77,22 @@ def _match_event_to_db(event: dict, db_matches: list[dict]) -> dict | None:
 
 
 def collect() -> int:
-    """Scrape TickPick for World Cup ticket prices."""
+    """Scrape TickPick category page for World Cup ticket prices."""
     db_matches = [dict(m) for m in get_all_matches()]
     updated = 0
 
     with httpx.Client(headers=HEADERS, follow_redirects=True) as client:
-        urls = _discover_event_urls(client)
+        try:
+            resp = client.get(CATEGORY_URL, timeout=30)
+            resp.raise_for_status()
+        except Exception as e:
+            log.error(f"[tickpick] Category page failed: {e}")
+            return 0
 
-        for url in urls:
-            time.sleep(1.5)
-            try:
-                resp = client.get(url, timeout=15)
-                resp.raise_for_status()
-            except Exception as e:
-                log.warning(f"[tickpick] Failed {url}: {e}")
-                continue
+        events = _parse_all_events(resp.text)
+        log.info(f"[tickpick] Parsed {len(events)} events from category page")
 
-            event = _parse_event_data(resp.text)
-            if not event or not event.get("lowest"):
-                continue
-
+        for event in events:
             match = _match_event_to_db(event, db_matches)
             if not match:
                 continue
@@ -117,7 +104,7 @@ def collect() -> int:
                 median=event["lowest"],
                 highest=event.get("highest"),
                 listing_count=0,
-                listing_url=url,
+                listing_url=event.get("url", ""),
                 is_transferable="yes",
             )
             updated += 1
