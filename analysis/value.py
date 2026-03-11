@@ -132,8 +132,7 @@ def score_all_matches() -> int:
     """Recalculate value scores for all matches. Returns count updated."""
     matches = get_all_matches()
     count = 0
-    for match in matches:
-        m = dict(match)
+    for m in matches:
         score = score_match(m)
         update_value_score(m["id"], score)
         count += 1

@@ -78,7 +78,7 @@ def _match_event_to_db(event: dict, db_matches: list[dict]) -> dict | None:
 
 def collect() -> int:
     """Scrape TickPick category page for World Cup ticket prices."""
-    db_matches = [dict(m) for m in get_all_matches()]
+    db_matches = get_all_matches()
     updated = 0
 
     with httpx.Client(headers=HEADERS, follow_redirects=True) as client:

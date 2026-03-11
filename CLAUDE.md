@@ -2,13 +2,9 @@
 
 FIFA 2026 World Cup ticket investment tracker.
 
-@~/.claude/vps-instructions.md
-
 ## Stack
-- FastAPI + SQLite + APScheduler + Docker
+- FastAPI (Vercel serverless) + Turso (cloud SQLite) + GitHub Actions (scrapers)
 - Single-page dashboard (DM Sans + Outfit fonts, custom CSS)
-- Port: 8200
-- Domain: tickets.duchessnikki.com
 - GitHub: https://github.com/jinsoowhang/world-cup-tickets
 
 ## Data Sources (all zero-config, no API keys)
@@ -19,20 +15,28 @@ FIFA 2026 World Cup ticket investment tracker.
 
 ## Architecture
 ```
-main.py                — FastAPI app + APScheduler + API routes
+main.py                — FastAPI app (serverless on Vercel)
+api/index.py           — Vercel serverless entry point
 config.py              — All constants (face values, venue scores, team tiers)
 db/schema.sql          — SQLite schema (matches, price_snapshots, platform_prices)
-db/database.py         — CRUD operations
+db/database.py         — CRUD operations (Turso/libsql)
 collector/fixtures.py  — Static fixture data (all 104 matches) + seeder
 collector/seatgeek.py  — Vivid Seats scraper (file named seatgeek.py for historical reasons)
 collector/stubhub.py   — StubHub scraper
 collector/tickpick.py  — TickPick scraper
 analysis/value.py      — Value scoring (0-100) + FIFA fee calculator
-viewer/static/index.html — Single-page dashboard (all HTML/CSS/JS inline)
+public/index.html      — Single-page dashboard (all HTML/CSS/JS inline)
+scripts/scrape.py      — Standalone scraper (GitHub Actions)
+.github/workflows/scrape.yml — Cron scraper workflow (every 6h)
+vercel.json            — Vercel routing config
 docs/plans/            — Design docs and implementation plans
 ```
 
-## Database Tables
+## Database (Turso)
+- Cloud SQLite via libsql — same SQL dialect, no schema changes needed
+- Env vars: `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`
+
+### Tables
 - `matches` — 104 fixtures with face values, resale prices, value scores
 - `price_snapshots` — historical price aggregates per match (for trend charts)
 - `platform_prices` — per-platform prices (vividseats, stubhub, tickpick) with transferability flag
@@ -57,20 +61,26 @@ Weighted factors (with resale data / without):
 - Manual refresh button
 
 ## Deployment
-```bash
-# Build and run locally
-uv run uvicorn main:app --host 0.0.0.0 --port 8200
+- **Frontend:** Vercel serves `public/index.html` as static
+- **API:** FastAPI on Vercel serverless (`/api/*` routes)
+- **Scrapers:** GitHub Actions cron (every 6h) runs `scripts/scrape.py`
+- **Env vars needed:** `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` (set in both Vercel and GitHub Secrets)
 
-# Deploy to VPS
-scp <files> root@187.77.7.89:/tmp/wc-update/
-ssh root@187.77.7.89 "docker cp /tmp/wc-update/<file> world-cup-tickets:/app/<file>"
-ssh root@187.77.7.89 "docker restart world-cup-tickets"
+```bash
+# Deploy to Vercel
+vercel --prod
+
+# Run scrapers locally
+TURSO_DATABASE_URL=... TURSO_AUTH_TOKEN=... uv run python scripts/scrape.py
+
+# Trigger scraper manually on GitHub
+gh workflow run scrape.yml
 ```
 
 ## Current State (March 2026)
 - All 104 matches seeded from static data (72 group + 32 knockout)
 - 6 team slots TBD pending UEFA/intercontinental playoffs (March 26-31, 2026)
-- Multi-platform scraping: Vivid Seats, StubHub, TickPick (every 6h)
+- Multi-platform scraping: Vivid Seats, StubHub, TickPick (every 6h via GitHub Actions)
 - Dashboard focused on match cards with resale pricing (News/Reddit/Calculator removed)
 - Price history being collected in price_snapshots + platform_prices tables
 

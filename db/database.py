@@ -1,30 +1,55 @@
-import sqlite3
+import os
 from contextlib import contextmanager
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent / "tickets.db"
+import libsql_experimental as libsql
+
 SCHEMA_PATH = Path(__file__).parent / "schema.sql"
+
+_initialized = False
+
+
+def _get_url_and_token():
+    url = os.environ.get("TURSO_DATABASE_URL", "").strip()
+    token = os.environ.get("TURSO_AUTH_TOKEN", "").strip()
+    if not url:
+        raise RuntimeError("TURSO_DATABASE_URL environment variable is required")
+    return url, token
 
 
 def init_db() -> None:
+    global _initialized
+    if _initialized:
+        return
+    schema = SCHEMA_PATH.read_text()
     with get_conn() as conn:
-        conn.executescript(SCHEMA_PATH.read_text())
+        # executescript doesn't work on remote Turso connections,
+        # so execute each statement individually
+        for statement in schema.split(";"):
+            stmt = statement.strip()
+            if stmt:
+                conn.execute(stmt)
+    _initialized = True
+
+
+def _row_to_dict(cursor, row):
+    """Convert a row tuple to a dict using cursor.description."""
+    if row is None:
+        return None
+    columns = [desc[0] for desc in cursor.description]
+    return dict(zip(columns, row))
 
 
 @contextmanager
 def get_conn():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA foreign_keys=ON")
+    url, token = _get_url_and_token()
+    conn = libsql.connect(url, auth_token=token)
     try:
         yield conn
         conn.commit()
     except Exception:
         conn.rollback()
         raise
-    finally:
-        conn.close()
 
 
 # ---------------------------------------------------------------------------
@@ -87,19 +112,23 @@ def upsert_match(
         return cursor.rowcount > 0
 
 
-def get_all_matches() -> list[sqlite3.Row]:
+def get_all_matches() -> list[dict]:
     with get_conn() as conn:
-        return conn.execute(
+        cursor = conn.execute(
             "SELECT * FROM matches ORDER BY match_date, id"
-        ).fetchall()
+        )
+        rows = cursor.fetchall()
+        return [_row_to_dict(cursor, r) for r in rows]
 
 
-def get_matches_by_round(round: str) -> list[sqlite3.Row]:
+def get_matches_by_round(round: str) -> list[dict]:
     with get_conn() as conn:
-        return conn.execute(
+        cursor = conn.execute(
             "SELECT * FROM matches WHERE round = ? ORDER BY match_date",
             (round,),
-        ).fetchall()
+        )
+        rows = cursor.fetchall()
+        return [_row_to_dict(cursor, r) for r in rows]
 
 
 def update_value_score(match_id: int, score: int) -> None:
@@ -126,12 +155,14 @@ def insert_news(source_name: str, title: str, url: str, published_at: str | None
         return cursor.rowcount > 0
 
 
-def get_news(limit: int = 50) -> list[sqlite3.Row]:
+def get_news(limit: int = 50) -> list[dict]:
     with get_conn() as conn:
-        return conn.execute(
+        cursor = conn.execute(
             "SELECT * FROM news_items ORDER BY published_at DESC LIMIT ?",
             (limit,),
-        ).fetchall()
+        )
+        rows = cursor.fetchall()
+        return [_row_to_dict(cursor, r) for r in rows]
 
 
 # ---------------------------------------------------------------------------
@@ -154,12 +185,14 @@ def insert_reddit_post(
         return cursor.rowcount > 0
 
 
-def get_reddit_posts(limit: int = 50) -> list[sqlite3.Row]:
+def get_reddit_posts(limit: int = 50) -> list[dict]:
     with get_conn() as conn:
-        return conn.execute(
+        cursor = conn.execute(
             "SELECT * FROM reddit_posts ORDER BY published_at DESC LIMIT ?",
             (limit,),
-        ).fetchall()
+        )
+        rows = cursor.fetchall()
+        return [_row_to_dict(cursor, r) for r in rows]
 
 
 # ---------------------------------------------------------------------------
@@ -210,20 +243,24 @@ def insert_price_snapshot(
         )
 
 
-def get_price_history(match_id: int, limit: int = 30) -> list[sqlite3.Row]:
+def get_price_history(match_id: int, limit: int = 30) -> list[dict]:
     with get_conn() as conn:
-        return conn.execute(
+        cursor = conn.execute(
             """SELECT * FROM price_snapshots
             WHERE match_id = ? ORDER BY fetched_at DESC LIMIT ?""",
             (match_id, limit),
-        ).fetchall()
+        )
+        rows = cursor.fetchall()
+        return [_row_to_dict(cursor, r) for r in rows]
 
 
-def get_matches_with_seatgeek_id() -> list[sqlite3.Row]:
+def get_matches_with_seatgeek_id() -> list[dict]:
     with get_conn() as conn:
-        return conn.execute(
+        cursor = conn.execute(
             "SELECT id, seatgeek_id FROM matches WHERE seatgeek_id IS NOT NULL"
-        ).fetchall()
+        )
+        rows = cursor.fetchall()
+        return [_row_to_dict(cursor, r) for r in rows]
 
 
 # ---------------------------------------------------------------------------
@@ -251,10 +288,10 @@ def upsert_platform_price(
         )
 
 
-def get_latest_platform_prices(match_id: int) -> list[sqlite3.Row]:
+def get_latest_platform_prices(match_id: int) -> list[dict]:
     """Get the most recent price for each platform for a given match."""
     with get_conn() as conn:
-        return conn.execute(
+        cursor = conn.execute(
             """SELECT * FROM platform_prices
             WHERE id IN (
                 SELECT MAX(id) FROM platform_prices
@@ -263,21 +300,24 @@ def get_latest_platform_prices(match_id: int) -> list[sqlite3.Row]:
             )
             ORDER BY platform""",
             (match_id,),
-        ).fetchall()
+        )
+        rows = cursor.fetchall()
+        return [_row_to_dict(cursor, r) for r in rows]
 
 
 def get_all_latest_platform_prices() -> dict[int, list[dict]]:
     """Get latest prices per platform for ALL matches. Returns {match_id: [prices]}."""
     with get_conn() as conn:
-        rows = conn.execute(
+        cursor = conn.execute(
             """SELECT * FROM platform_prices
             WHERE id IN (
                 SELECT MAX(id) FROM platform_prices GROUP BY match_id, platform
             )
             ORDER BY match_id, platform"""
-        ).fetchall()
+        )
+        rows = cursor.fetchall()
     result = {}
     for row in rows:
-        d = dict(row)
+        d = _row_to_dict(cursor, row)
         result.setdefault(d["match_id"], []).append(d)
     return result

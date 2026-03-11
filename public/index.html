@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Cup 2026 — Ticket Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-deep: #08080f;
+            --bg-card: #111119;
+            --bg-card-hover: #16161f;
+            --bg-surface: #0d0d15;
+            --border: #1e1e2e;
+            --border-hover: #2e2e44;
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888a0;
+            --text-muted: #55556a;
+            --accent: #e94560;
+            --gold: #f5c518;
+            --gold-dim: #c9a200;
+
+            /* Round colors */
+            --round-group: #3b82f6;
+            --round-r32: #06b6d4;
+            --round-r16: #14b8a6;
+            --round-qf: #a855f7;
+            --round-sf: #f97316;
+            --round-final: #f5c518;
+            --round-3rd: #6b7280;
+
+        }
+
+        body {
+            font-family: 'DM Sans', system-ui, sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Background texture */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(233,69,96,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 100%, rgba(245,197,24,0.04) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── Header ── */
+        .site-header {
+            position: relative;
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 1.5rem 1.25rem;
+            background: linear-gradient(180deg, rgba(17,17,25,0.95) 0%, var(--bg-deep) 100%);
+        }
+        .site-header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 10%;
+            right: 10%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(245,197,24,0.3), rgba(233,69,96,0.2), transparent);
+        }
+        .header-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .header-brand h1 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.6rem;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #ffffff 30%, var(--gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header-subtitle {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 0.15rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse-dot 2s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+            50% { opacity: 0.6; box-shadow: 0 0 0 4px rgba(34,197,94,0); }
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .countdown-box {
+            text-align: right;
+        }
+        .countdown-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .countdown-value {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--gold);
+        }
+        .update-time {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+        .btn-refresh {
+            padding: 0.45rem 1rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            font-family: inherit;
+        }
+        .btn-refresh:hover { background: #d63a52; }
+        .btn-refresh:active { transform: scale(0.97); }
+
+        /* ── Stats Bar ── */
+        .stats-bar {
+            max-width: 1280px;
+            margin: 1.25rem auto 0;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+        }
+        .stat-card {
+            background: rgba(17,17,25,0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.85rem 1rem;
+            text-align: center;
+        }
+        .stat-value {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            line-height: 1.1;
+        }
+        .stat-label {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-top: 0.25rem;
+        }
+
+        /* ── Main Content ── */
+        .main-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 1.25rem 1.5rem 3rem;
+            position: relative;
+            z-index: 1;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ── Filter Bar ── */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+        .filter-btn {
+            padding: 0.4rem 0.85rem;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .filter-btn:hover {
+            background: var(--bg-card);
+            border-color: var(--border-hover);
+            color: var(--text-secondary);
+        }
+        .filter-btn.active {
+            color: white;
+            border-color: transparent;
+        }
+        .filter-btn[data-filter="all"].active { background: var(--accent); }
+        .filter-btn[data-filter="Group"].active { background: var(--round-group); }
+        .filter-btn[data-filter="Round of 32"].active { background: var(--round-r32); }
+        .filter-btn[data-filter="Round of 16"].active { background: var(--round-r16); }
+        .filter-btn[data-filter="Quarter-final"].active { background: var(--round-qf); }
+        .filter-btn[data-filter="Semi-final"].active { background: var(--round-sf); }
+        .filter-btn[data-filter="Final"].active { background: var(--round-final); color: #000; }
+        .filter-btn[data-filter="3rd Place"].active { background: var(--round-3rd); }
+        .filter-count {
+            font-size: 0.65rem;
+            opacity: 0.7;
+            margin-left: 0.2rem;
+        }
+        .filter-spacer { flex: 1; }
+        .filter-input {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 8px;
+            padding: 0.45rem 0.75rem;
+            font-size: 0.8rem;
+            font-family: inherit;
+            width: 11rem;
+            transition: border-color 0.2s;
+        }
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        .filter-select {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            padding: 0.45rem 0.75rem;
+            font-size: 0.8rem;
+            font-family: inherit;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* ── Resale Toggle ── */
+        .resale-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            cursor: pointer;
+            user-select: none;
+        }
+        .resale-toggle input[type="checkbox"] {
+            accent-color: var(--gold);
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+        }
+        .resale-toggle-label {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        /* ── Match Grid ── */
+        .match-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 0.85rem;
+        }
+
+        /* ── Match Card ── */
+        .match-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: visible;
+            transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
+            opacity: 0;
+            transform: translateY(12px);
+            animation: card-enter 0.4s ease forwards;
+        }
+        .match-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        .match-card.high-value {
+            box-shadow: 0 0 0 1px rgba(245,197,24,0.15), 0 4px 20px rgba(245,197,24,0.08);
+        }
+        .match-card.high-value:hover {
+            box-shadow: 0 0 0 1px rgba(245,197,24,0.25), 0 8px 30px rgba(245,197,24,0.12);
+        }
+        @keyframes card-enter {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-top-border {
+            height: 3px;
+            border-radius: 12px 12px 0 0;
+        }
+        .card-body {
+            padding: 1rem 1.1rem;
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.85rem;
+        }
+        .round-tag {
+            font-size: 0.68rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.2rem 0.55rem;
+            border-radius: 5px;
+            background: rgba(255,255,255,0.06);
+        }
+
+        /* Score Ring */
+        .score-ring-wrap {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            flex-shrink: 0;
+        }
+        .score-ring-wrap svg {
+            transform: rotate(-90deg);
+        }
+        .score-ring-bg {
+            fill: none;
+            stroke: rgba(255,255,255,0.06);
+            stroke-width: 3;
+        }
+        .score-ring-fill {
+            fill: none;
+            stroke-width: 3;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.8s ease;
+        }
+        .score-ring-text {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 0.78rem;
+            pointer-events: none;
+        }
+
+        /* Score Tooltip */
+        .score-tooltip {
+            display: none;
+            position: absolute;
+            top: calc(100% + 10px);
+            right: -8px;
+            z-index: 100;
+            background: var(--bg-card);
+            border: 1px solid var(--border-hover);
+            border-radius: 10px;
+            padding: 10px 12px;
+            min-width: 200px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            pointer-events: auto;
+        }
+        .score-tooltip::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            right: 18px;
+            width: 10px;
+            height: 10px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-hover);
+            border-left: 1px solid var(--border-hover);
+            transform: rotate(45deg);
+        }
+        .score-ring-wrap:hover .score-tooltip,
+        .score-ring-wrap.show-tooltip .score-tooltip {
+            display: block;
+        }
+        .score-ring-wrap { cursor: pointer; }
+        .tooltip-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+        .tooltip-factor {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .tooltip-factor:last-child { margin-bottom: 0; }
+        .tooltip-factor-name {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            width: 52px;
+            flex-shrink: 0;
+        }
+        .tooltip-bar-track {
+            flex: 1;
+            height: 5px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .tooltip-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.4s ease;
+        }
+        .tooltip-factor-score {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            width: 32px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .tooltip-factor-detail {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.62rem;
+            color: var(--text-muted);
+            max-width: 70px;
+            text-align: right;
+            flex-shrink: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Teams */
+        .teams-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            margin-bottom: 0.85rem;
+        }
+        .team-name {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .team-name.home { justify-content: flex-end; }
+        .team-name.away { justify-content: flex-start; }
+        .team-flag {
+            width: 22px;
+            height: 16px;
+            border-radius: 2px;
+            object-fit: cover;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        .vs-divider {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        /* Meta row */
+        .card-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+        .meta-venue {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .venue-flag {
+            width: 18px;
+            height: 13px;
+            border-radius: 2px;
+            object-fit: cover;
+        }
+
+        /* Prices */
+        .platform-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.45rem;
+            margin-bottom: 0.65rem;
+        }
+        .platform-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.55rem 0.3rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.06);
+            text-decoration: none;
+            transition: border-color 0.2s, background 0.2s, transform 0.15s;
+            cursor: pointer;
+        }
+        .platform-card:hover {
+            border-color: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.06);
+            transform: translateY(-1px);
+        }
+        .platform-card.cheapest {
+            border-color: rgba(34,197,94,0.35);
+            background: rgba(34,197,94,0.06);
+        }
+        .platform-card.cheapest:hover {
+            border-color: rgba(34,197,94,0.55);
+            background: rgba(34,197,94,0.1);
+        }
+        .platform-card.no-listing {
+            opacity: 0.4;
+            cursor: default;
+        }
+        .platform-card.no-listing:hover {
+            border-color: rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.03);
+            transform: none;
+        }
+        .platform-card-name {
+            font-size: 0.62rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .platform-card-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .platform-card-price {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--gold);
+        }
+        .platform-card.no-listing .platform-card-price {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+        .platform-card-best {
+            font-size: 0.52rem;
+            font-weight: 700;
+            color: #4ade80;
+            background: rgba(34,197,94,0.15);
+            padding: 0.05rem 0.3rem;
+            border-radius: 3px;
+            letter-spacing: 0.04em;
+        }
+        .platform-card-transfer {
+            font-size: 0.55rem;
+            color: #4ade80;
+        }
+
+        /* Mexico warning */
+        .mexico-alert {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.45rem 0.65rem;
+            background: rgba(245,158,11,0.1);
+            border: 1px solid rgba(245,158,11,0.2);
+            border-radius: 6px;
+            margin-bottom: 0.65rem;
+        }
+        .mexico-alert-icon {
+            color: #f59e0b;
+            flex-shrink: 0;
+        }
+        .mexico-alert-text {
+            font-size: 0.7rem;
+            color: #fbbf24;
+            font-weight: 500;
+        }
+
+        /* Card footer */
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
+            padding-top: 0.65rem;
+            border-top: 1px solid var(--border);
+        }
+        .btn-buy {
+            flex: 1;
+            text-align: center;
+            padding: 0.5rem;
+            background: var(--accent);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 7px;
+            text-decoration: none;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+        .btn-buy:hover { background: #d63a52; }
+        .btn-details {
+            padding: 0.5rem 0.85rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .btn-details:hover {
+            border-color: var(--border-hover);
+            color: var(--text-secondary);
+        }
+
+        /* ── Resale Prices ── */
+        .resale-section {
+            margin-bottom: 0.65rem;
+        }
+        .resale-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.4rem;
+        }
+        .resale-label {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .resale-label svg { flex-shrink: 0; }
+        .resale-listings {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+        .markup-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+        }
+        .markup-badge.up {
+            background: rgba(34,197,94,0.12);
+            color: #4ade80;
+        }
+        .markup-badge.down {
+            background: rgba(239,68,68,0.12);
+            color: #f87171;
+        }
+        .seatgeek-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.7rem;
+            color: var(--gold-dim);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .seatgeek-link:hover { color: var(--gold); }
+
+        /* ── Skeleton ── */
+        .skeleton-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .skeleton-bar {
+            height: 3px;
+            background: var(--border);
+        }
+        .skeleton-body {
+            padding: 1rem;
+        }
+        .skeleton-line {
+            height: 12px;
+            border-radius: 6px;
+            background: linear-gradient(90deg, var(--bg-card) 25%, rgba(255,255,255,0.04) 50%, var(--bg-card) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s ease-in-out infinite;
+            margin-bottom: 0.75rem;
+        }
+        .skeleton-line.w60 { width: 60%; }
+        .skeleton-line.w80 { width: 80%; }
+        .skeleton-line.w40 { width: 40%; }
+        .skeleton-line.h24 { height: 24px; }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* ── Spinner ── */
+        .spinner-wrap {
+            display: flex;
+            justify-content: center;
+            padding: 3rem;
+        }
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Empty State ── */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            display: none;
+        }
+        .empty-state.show { display: block; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .stats-bar { grid-template-columns: repeat(2, 1fr); }
+            .match-grid { grid-template-columns: 1fr; }
+            .header-inner { flex-direction: column; align-items: flex-start; }
+            .header-right { width: 100%; justify-content: space-between; }
+            .filter-bar { gap: 0.4rem; }
+            .filter-input { width: 100%; order: 10; }
+            .filter-select { width: 100%; order: 11; }
+            .filter-spacer { display: none; }
+        }
+        @media (max-width: 480px) {
+            .stats-bar { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+            .site-header { padding: 1rem; }
+            .main-content { padding: 1rem; }
+            .platform-cards { gap: 0.3rem; }
+        }
+
+        /* ── Multi-Platform Comparison ── */
+        /* (old platform-row styles removed — replaced by platform-cards) */
+
+        /* ── Price Chart Modal ── */
+        .chart-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .chart-overlay.open { display: flex; }
+        .chart-modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            width: 100%;
+            max-width: 640px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modal-enter 0.25s ease;
+        }
+        @keyframes modal-enter {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .chart-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        .chart-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 6px;
+            transition: color 0.2s, background 0.2s;
+            line-height: 0;
+        }
+        .chart-close:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); }
+        .chart-body {
+            padding: 1.25rem;
+        }
+        .chart-svg-wrap {
+            width: 100%;
+            aspect-ratio: 2.2 / 1;
+            position: relative;
+        }
+        .chart-svg-wrap svg {
+            width: 100%;
+            height: 100%;
+        }
+        .chart-tooltip {
+            position: absolute;
+            pointer-events: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.45rem 0.65rem;
+            font-size: 0.72rem;
+            color: var(--text-primary);
+            white-space: nowrap;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+        .chart-tooltip.visible { opacity: 1; }
+        .chart-tooltip-date { color: var(--text-muted); font-size: 0.65rem; margin-bottom: 0.2rem; }
+        .chart-tooltip-row { display: flex; align-items: center; gap: 0.35rem; }
+        .chart-tooltip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .chart-tooltip-val { font-family: 'Outfit', sans-serif; font-weight: 600; }
+        .chart-empty {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .chart-legend {
+            display: flex;
+            gap: 1.25rem;
+            justify-content: center;
+            margin-top: 0.75rem;
+            flex-wrap: wrap;
+        }
+        .chart-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+        }
+        .chart-legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .chart-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+        .chart-stat {
+            text-align: center;
+        }
+        .chart-stat-value {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--gold);
+        }
+        .chart-stat-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-top: 0.15rem;
+        }
+        .btn-chart {
+            padding: 0.5rem 0.85rem;
+            font-size: 0.75rem;
+            color: var(--gold-dim);
+            border: 1px solid rgba(245,197,24,0.2);
+            border-radius: 7px;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-family: inherit;
+            cursor: pointer;
+            background: rgba(245,197,24,0.06);
+        }
+        .btn-chart:hover {
+            border-color: rgba(245,197,24,0.4);
+            color: var(--gold);
+            background: rgba(245,197,24,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="header-brand">
+                <h1>FIFA World Cup 2026</h1>
+                <div class="header-subtitle">
+                    <span class="live-dot"></span>
+                    <span>Ticket Investment Tracker</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="countdown-box">
+                    <div class="countdown-label">Kickoff in</div>
+                    <div class="countdown-value" id="countdown">--d --h --m</div>
+                </div>
+                <div>
+                    <div class="update-time" id="lastUpdate"></div>
+                    <button class="btn-refresh" onclick="refreshData()">Refresh</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+
+    <!-- Stats Bar -->
+    <div class="stats-bar" id="statsBar">
+        <div class="stat-card">
+            <div class="stat-value" id="statTotal">--</div>
+            <div class="stat-label">Total Matches</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="statHighValue">--</div>
+            <div class="stat-label">High Value (65+)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="statAvgScore">--</div>
+            <div class="stat-label">Avg Score</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="statDays">--</div>
+            <div class="stat-label">Days to Kickoff</div>
+        </div>
+    </div>
+
+    <main class="main-content">
+
+        <!-- Matches Tab -->
+        <div id="tab-matches" class="tab-content active">
+            <div class="filter-bar">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="Group">Group</button>
+                <button class="filter-btn" data-filter="Round of 32">R32</button>
+                <button class="filter-btn" data-filter="Round of 16">R16</button>
+                <button class="filter-btn" data-filter="Quarter-final">QF</button>
+                <button class="filter-btn" data-filter="Semi-final">SF</button>
+                <button class="filter-btn" data-filter="Final">Final</button>
+                <span class="filter-spacer"></span>
+                <input id="teamSearch" type="text" placeholder="Search team…" class="filter-input" oninput="filterMatches()">
+                <select id="sortSelect" class="filter-select" onchange="filterMatches()">
+                    <option value="score">Sort: Value Score</option>
+                    <option value="date">Sort: Date</option>
+                    <option value="price">Sort: Price</option>
+                </select>
+                <select id="countryFilter" class="filter-select" onchange="filterMatches()">
+                    <option value="">All Countries</option>
+                    <option value="USA">USA</option>
+                    <option value="Canada">Canada</option>
+                    <option value="Mexico">Mexico</option>
+                </select>
+                <label class="resale-toggle">
+                    <input type="checkbox" id="resaleOnly" checked onchange="filterMatches()">
+                    <span class="resale-toggle-label">Resale only</span>
+                </label>
+            </div>
+
+            <div id="matchGrid" class="match-grid">
+                <div class="skeleton-card"><div class="skeleton-bar"></div><div class="skeleton-body"><div class="skeleton-line w60"></div><div class="skeleton-line h24 w80"></div><div class="skeleton-line w40"></div></div></div>
+                <div class="skeleton-card"><div class="skeleton-bar"></div><div class="skeleton-body"><div class="skeleton-line w60"></div><div class="skeleton-line h24 w80"></div><div class="skeleton-line w40"></div></div></div>
+                <div class="skeleton-card"><div class="skeleton-bar"></div><div class="skeleton-body"><div class="skeleton-line w60"></div><div class="skeleton-line h24 w80"></div><div class="skeleton-line w40"></div></div></div>
+            </div>
+            <div id="noMatches" class="empty-state">No matches found.</div>
+        </div>
+
+
+    </main>
+
+    <!-- Price Chart Modal -->
+    <div class="chart-overlay" id="chartOverlay" onclick="if(event.target===this)closeChart()">
+        <div class="chart-modal">
+            <div class="chart-header">
+                <span class="chart-title" id="chartTitle">Price History</span>
+                <button class="chart-close" onclick="closeChart()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="chart-body" id="chartBody"></div>
+        </div>
+    </div>
+
+    <script>
+    // ─── Data & State ───
+    let allMatches = [];
+
+    // ─── Team → ISO Code Mapping ───
+    const TEAM_ISO = {
+        'Argentina': 'ar', 'Australia': 'au', 'Belgium': 'be', 'Bolivia': 'bo',
+        'Brazil': 'br', 'Cameroon': 'cm', 'Canada': 'ca', 'Chile': 'cl',
+        'China PR': 'cn', 'Colombia': 'co', 'Costa Rica': 'cr', 'Croatia': 'hr',
+        'Czech Republic': 'cz', 'Denmark': 'dk', 'Ecuador': 'ec', 'Egypt': 'eg',
+        'England': 'gb-eng', 'France': 'fr', 'Germany': 'de', 'Ghana': 'gh',
+        'Greece': 'gr', 'Honduras': 'hn', 'Hungary': 'hu', 'Iran': 'ir',
+        'Iraq': 'iq', 'Italy': 'it', 'Ivory Coast': 'ci', 'Jamaica': 'jm',
+        'Japan': 'jp', 'Mexico': 'mx', 'Morocco': 'ma', 'Netherlands': 'nl',
+        'New Zealand': 'nz', 'Nigeria': 'ng', 'North Macedonia': 'mk',
+        'Norway': 'no', 'Panama': 'pa', 'Paraguay': 'py', 'Peru': 'pe',
+        'Poland': 'pl', 'Portugal': 'pt', 'Qatar': 'qa', 'Romania': 'ro',
+        'Russia': 'ru', 'Saudi Arabia': 'sa', 'Scotland': 'gb-sct',
+        'Senegal': 'sn', 'Serbia': 'rs', 'Slovakia': 'sk', 'Slovenia': 'si',
+        'South Africa': 'za', 'South Korea': 'kr', 'Spain': 'es',
+        'Sweden': 'se', 'Switzerland': 'ch', 'Tunisia': 'tn', 'Turkey': 'tr',
+        'Ukraine': 'ua', 'United States': 'us', 'USA': 'us', 'Uruguay': 'uy',
+        'Uzbekistan': 'uz', 'Venezuela': 've', 'Wales': 'gb-wls',
+        'Indonesia': 'id', 'Vietnam': 'vn', 'Thailand': 'th', 'Philippines': 'ph',
+        'India': 'in', 'Algeria': 'dz', 'Congo DR': 'cd', 'Mali': 'ml',
+        'Bahrain': 'bh', 'Oman': 'om', 'Palestine': 'ps', 'Jordan': 'jo',
+        'United Arab Emirates': 'ae', 'Kenya': 'ke', 'Tanzania': 'tz',
+        'Trinidad and Tobago': 'tt', 'El Salvador': 'sv', 'Guatemala': 'gt',
+        'Cuba': 'cu', 'Haiti': 'ht', 'Curacao': 'cw', 'Curaçao': 'cw', 'Suriname': 'sr',
+        'Cape Verde': 'cv', 'Cabo Verde': 'cv',
+        'Korea Republic': 'kr', 'IR Iran': 'ir', "Côte d'Ivoire": 'ci',
+        'Austria': 'at', 'Albania': 'al', 'Bosnia and Herzegovina': 'ba',
+        'Northern Ireland': 'gb-nir', 'Kosovo': 'xk', 'DR Congo': 'cd',
+        'New Caledonia': 'nc',
+    };
+
+    const COUNTRY_ISO = { 'USA': 'us', 'Canada': 'ca', 'Mexico': 'mx' };
+
+    const ROUND_COLORS = {
+        'Group':          { border: '#3b82f6', bg: 'rgba(59,130,246,0.12)', text: '#60a5fa' },
+        'Round of 32':    { border: '#06b6d4', bg: 'rgba(6,182,212,0.12)', text: '#67e8f9' },
+        'Round of 16':    { border: '#14b8a6', bg: 'rgba(20,184,166,0.12)', text: '#5eead4' },
+        'Quarter-final':  { border: '#a855f7', bg: 'rgba(168,85,247,0.12)', text: '#c084fc' },
+        'Semi-final':     { border: '#f97316', bg: 'rgba(249,115,22,0.12)', text: '#fb923c' },
+        'Final':          { border: '#f5c518', bg: 'rgba(245,197,24,0.12)', text: '#fbbf24' },
+        '3rd Place':      { border: '#6b7280', bg: 'rgba(107,114,128,0.12)', text: '#9ca3af' },
+    };
+
+    const ROUND_LABELS = {
+        'Group': 'Group', 'Round of 32': 'R32', 'Round of 16': 'R16',
+        'Quarter-final': 'QF', 'Semi-final': 'SF', 'Final': 'Final', '3rd Place': '3rd',
+    };
+
+    // ─── Helpers ───
+    function flagUrl(iso, w = 40) {
+        return `https://flagcdn.com/w${w}/${iso}.png`;
+    }
+
+    function teamFlag(name, size = 22) {
+        const iso = TEAM_ISO[name];
+        if (!iso) return '';
+        return `<img src="${flagUrl(iso, 40)}" alt="${name}" width="${size}" class="team-flag" onerror="this.style.display='none'" loading="lazy">`;
+    }
+
+    const FACTOR_COLORS = {
+        Round: '#3b82f6',
+        Venue: '#a855f7',
+        Team: '#22c55e',
+        Country: '#f97316',
+        Resale: '#f5c518',
+    };
+
+    function scoreRing(score, breakdown) {
+        const r = 18, c = 2 * Math.PI * r;
+        const pct = Math.min(score, 100) / 100;
+        const offset = c * (1 - pct);
+        let color;
+        if (score >= 65) color = '#4ade80';
+        else if (score >= 40) color = '#fbbf24';
+        else color = '#f87171';
+
+        let tooltipHtml = '';
+        if (breakdown && breakdown.length) {
+            const rows = breakdown.map(f => {
+                const barPct = f.max > 0 ? Math.round((f.score / f.max) * 100) : 0;
+                const barColor = FACTOR_COLORS[f.name] || '#6b7280';
+                return `
+                    <div class="tooltip-factor">
+                        <span class="tooltip-factor-name">${f.name}</span>
+                        <div class="tooltip-bar-track">
+                            <div class="tooltip-bar-fill" style="width:${barPct}%;background:${barColor}"></div>
+                        </div>
+                        <span class="tooltip-factor-score">${f.score}/${f.max}</span>
+                        <span class="tooltip-factor-detail" title="${f.detail}">${f.detail}</span>
+                    </div>`;
+            }).join('');
+            tooltipHtml = `
+                <div class="score-tooltip">
+                    <div class="tooltip-title">Score Breakdown</div>
+                    ${rows}
+                </div>`;
+        }
+
+        return `
+            <div class="score-ring-wrap" onclick="this.classList.toggle('show-tooltip');event.stopPropagation()">
+                <svg width="44" height="44" viewBox="0 0 44 44">
+                    <circle class="score-ring-bg" cx="22" cy="22" r="${r}"/>
+                    <circle class="score-ring-fill" cx="22" cy="22" r="${r}"
+                        stroke="${color}"
+                        stroke-dasharray="${c}"
+                        stroke-dashoffset="${offset}"/>
+                </svg>
+                <div class="score-ring-text" style="color:${color}">${score}</div>
+                ${tooltipHtml}
+            </div>`;
+    }
+
+    function relativeTime(dateStr) {
+        if (!dateStr) return '';
+        const now = Date.now();
+        const then = new Date(dateStr).getTime();
+        const diffMs = now - then;
+        if (isNaN(diffMs) || diffMs < 0) return formatDate(dateStr.split(' ')[0]);
+
+        const mins = Math.floor(diffMs / 60000);
+        if (mins < 60) return `${mins}m ago`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${hrs}h ago`;
+        const days = Math.floor(hrs / 24);
+        if (days < 7) return `${days}d ago`;
+        return formatDate(dateStr.split(' ')[0]);
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return 'TBD';
+        const d = new Date(dateStr + 'T00:00:00');
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function getRoundColor(round) {
+        return ROUND_COLORS[round] || ROUND_COLORS['Group'];
+    }
+
+    // ─── Countdown ───
+    function updateCountdown() {
+        const kickoff = new Date('2026-06-11T00:00:00Z').getTime();
+        const now = Date.now();
+        const diff = kickoff - now;
+        if (diff <= 0) {
+            document.getElementById('countdown').textContent = 'LIVE NOW';
+            return;
+        }
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff % 86400000) / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        document.getElementById('countdown').textContent = `${d}d ${h}h ${m}m`;
+        document.getElementById('statDays').textContent = d;
+    }
+    updateCountdown();
+    setInterval(updateCountdown, 60000);
+
+
+    // ─── Filter Buttons ───
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            filterMatches();
+        });
+    });
+
+    // ─── Render Match Card ───
+    function renderMatchCard(m, index) {
+        const rc = getRoundColor(m.round);
+        const delay = Math.min(index, 10) * 50;
+        const isHigh = m.value_score >= 75;
+        const venueIso = COUNTRY_ISO[m.country];
+
+        const mexicoAlert = m.is_mexico_venue ? `
+            <div class="mexico-alert">
+                <svg class="mexico-alert-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+                <span class="mexico-alert-text">Resale capped at face value</span>
+            </div>` : '';
+
+        return `
+            <div class="match-card${isHigh ? ' high-value' : ''}" style="animation-delay:${delay}ms">
+                <div class="card-top-border" style="background:${rc.border}"></div>
+                <div class="card-body">
+                    <div class="card-header">
+                        <span class="round-tag" style="background:${rc.bg};color:${rc.text}">${ROUND_LABELS[m.round] || m.round}</span>
+                        ${scoreRing(m.value_score, m.score_breakdown)}
+                    </div>
+
+                    <div class="teams-row">
+                        <span class="team-name home">
+                            ${teamFlag(m.home_team)}
+                            ${m.home_team || 'TBD'}
+                        </span>
+                        <span class="vs-divider">vs</span>
+                        <span class="team-name away">
+                            ${m.away_team || 'TBD'}
+                            ${teamFlag(m.away_team)}
+                        </span>
+                    </div>
+
+                    <div class="card-meta">
+                        <span>${formatDate(m.match_date)}</span>
+                        <span class="meta-venue">
+                            ${venueIso ? `<img src="${flagUrl(venueIso, 20)}" class="venue-flag" alt="${m.country}" onerror="this.style.display='none'" loading="lazy">` : ''}
+                            ${m.venue || 'TBD'}
+                        </span>
+                    </div>
+
+                    ${renderPlatformCards(m)}
+
+                    ${mexicoAlert}
+
+                    <div class="card-actions">
+                        <a href="https://www.fifa.com/fifaplus/en/tournaments/mens/worldcup/canadamexicousa2026/tickets"
+                           target="_blank" rel="noopener" class="btn-buy">FIFA Tickets</a>
+                        ${m.resale_median ? `<button class="btn-chart" onclick="event.stopPropagation();openChart(${m.id},'${(m.home_team||'TBD')} vs ${(m.away_team||'TBD')}')">Chart</button>` : ''}
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    // ─── Platform Buy Cards ───
+    const PLATFORM_NAMES = {
+        vividseats: 'Vivid Seats',
+        stubhub: 'StubHub',
+        tickpick: 'TickPick',
+    };
+
+    const PLATFORM_COLORS = {
+        vividseats: '#a855f7',
+        stubhub: '#3b82f6',
+        tickpick: '#22c55e',
+    };
+
+    const PLATFORM_ORDER = ['vividseats', 'stubhub', 'tickpick'];
+
+    function renderPlatformCards(m) {
+        const platforms = m.platform_prices || [];
+        const byKey = {};
+        platforms.forEach(p => { byKey[p.platform] = p; });
+
+        const withPrices = platforms.filter(p => p.lowest_price);
+        const cheapest = withPrices.length
+            ? withPrices.reduce((a, b) => (a.lowest_price < b.lowest_price ? a : b))
+            : null;
+
+        const cards = PLATFORM_ORDER.map(key => {
+            const p = byKey[key];
+            const hasListing = p && p.lowest_price && p.listing_url;
+            const isCheapest = hasListing && cheapest && key === cheapest.platform;
+            const tag = hasListing ? (p.is_transferable === 'yes' ? 'open' : '') : 'no-listing';
+
+            if (!hasListing) {
+                return `
+                    <div class="platform-card no-listing">
+                        <div class="platform-card-name">
+                            <span class="platform-card-dot" style="background:${PLATFORM_COLORS[key]}"></span>
+                            ${PLATFORM_NAMES[key]}
+                        </div>
+                        <div class="platform-card-price">No listing</div>
+                    </div>`;
+            }
+
+            return `
+                <a href="${p.listing_url}" target="_blank" rel="noopener"
+                   class="platform-card${isCheapest ? ' cheapest' : ''}">
+                    <div class="platform-card-name">
+                        <span class="platform-card-dot" style="background:${PLATFORM_COLORS[key]}"></span>
+                        ${PLATFORM_NAMES[key]}
+                    </div>
+                    <div class="platform-card-price">$${p.lowest_price.toLocaleString()}</div>
+                    ${isCheapest && withPrices.length > 1 ? '<span class="platform-card-best">BEST</span>' : ''}
+                    ${p.is_transferable === 'yes' ? '<span class="platform-card-transfer">Transferable</span>' : ''}
+                </a>`;
+        }).join('');
+
+        return `<div class="platform-cards">${cards}</div>`;
+    }
+
+    // ─── Filter & Sort ───
+    function filterMatches() {
+        const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+        const search = document.getElementById('teamSearch').value.toLowerCase();
+        const country = document.getElementById('countryFilter').value;
+        const sort = document.getElementById('sortSelect').value;
+
+        let filtered = allMatches;
+        if (activeFilter !== 'all') {
+            filtered = filtered.filter(m => m.round === activeFilter);
+        }
+        if (search) {
+            filtered = filtered.filter(m =>
+                (m.home_team || '').toLowerCase().includes(search) ||
+                (m.away_team || '').toLowerCase().includes(search)
+            );
+        }
+        if (country) {
+            filtered = filtered.filter(m => m.country === country);
+        }
+        if (document.getElementById('resaleOnly').checked) {
+            filtered = filtered.filter(m =>
+                (m.platform_prices && m.platform_prices.length > 0) || m.resale_lowest || m.resale_median
+            );
+        }
+
+        // Sort
+        filtered = [...filtered];
+        if (sort === 'date') {
+            filtered.sort((a, b) => (a.match_date || '').localeCompare(b.match_date || ''));
+        } else if (sort === 'price') {
+            filtered.sort((a, b) => (b.face_value_cat1 || 0) - (a.face_value_cat1 || 0));
+        } else {
+            filtered.sort((a, b) => (b.value_score || 0) - (a.value_score || 0));
+        }
+
+        const grid = document.getElementById('matchGrid');
+        const noMsg = document.getElementById('noMatches');
+        if (filtered.length === 0) {
+            grid.innerHTML = '';
+            noMsg.classList.add('show');
+        } else {
+            noMsg.classList.remove('show');
+            grid.innerHTML = filtered.map((m, i) => renderMatchCard(m, i)).join('');
+        }
+
+        // Update filter counts
+        updateFilterCounts();
+    }
+
+    function updateFilterCounts() {
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            const f = btn.dataset.filter;
+            const existing = btn.querySelector('.filter-count');
+            if (existing) existing.remove();
+            let count;
+            if (f === 'all') count = allMatches.length;
+            else count = allMatches.filter(m => m.round === f).length;
+            if (count > 0) {
+                const span = document.createElement('span');
+                span.className = 'filter-count';
+                span.textContent = `(${count})`;
+                btn.appendChild(span);
+            }
+        });
+    }
+
+    // ─── Stats ───
+    function updateStats() {
+        document.getElementById('statTotal').textContent = allMatches.length;
+        document.getElementById('statHighValue').textContent = allMatches.filter(m => m.value_score >= 65).length;
+        const avg = allMatches.length ? Math.round(allMatches.reduce((s, m) => s + (m.value_score || 0), 0) / allMatches.length) : 0;
+        document.getElementById('statAvgScore').textContent = avg;
+    }
+
+    // ─── Data Loading ───
+    async function loadData() {
+        try {
+            const res = await fetch('/api/analysis/scores');
+            allMatches = await res.json();
+            updateStats();
+            updateFilterCounts();
+            filterMatches();
+            document.getElementById('lastUpdate').textContent = 'Updated ' + new Date().toLocaleTimeString();
+        } catch (e) {
+            console.error('Failed to load data:', e);
+        }
+    }
+
+    async function refreshData() {
+        try {
+            await fetch('/api/refresh', { method: 'POST' });
+            setTimeout(loadData, 3000);
+        } catch (e) {
+            console.error('Refresh failed:', e);
+        }
+    }
+
+    // ─── Price Chart ───
+    function closeChart() {
+        document.getElementById('chartOverlay').classList.remove('open');
+    }
+
+    async function openChart(matchId, matchLabel) {
+        document.getElementById('chartTitle').textContent = matchLabel + ' — Price Trend';
+        document.getElementById('chartOverlay').classList.add('open');
+        document.getElementById('chartBody').innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+
+        try {
+            const res = await fetch(`/api/prices/${matchId}?limit=60`);
+            const snapshots = (await res.json()).reverse(); // oldest first
+
+            if (!snapshots.length) {
+                document.getElementById('chartBody').innerHTML = '<div class="chart-empty">No price history yet. Data is collected every 6 hours.</div>';
+                return;
+            }
+
+            // Find match face value for reference line
+            const match = allMatches.find(m => m.id === matchId);
+            const faceValue = match?.face_value_cat3 || 100;
+
+            renderChart(snapshots, faceValue);
+        } catch (e) {
+            document.getElementById('chartBody').innerHTML = '<div class="chart-empty">Failed to load price data.</div>';
+        }
+    }
+
+    function renderChart(snapshots, faceValue) {
+        const W = 580, H = 260, PAD = { top: 20, right: 20, bottom: 35, left: 55 };
+        const plotW = W - PAD.left - PAD.right;
+        const plotH = H - PAD.top - PAD.bottom;
+
+        // Extract series
+        const dates = snapshots.map(s => s.fetched_at);
+        const low = snapshots.map(s => s.lowest_price || 0);
+        const med = snapshots.map(s => s.median_price || 0);
+        const high = snapshots.map(s => s.highest_price || 0);
+
+        // Scale Y-axis to low + median range only (highest is often 50-100x
+        // larger and squishes the useful lines flat at the bottom)
+        const primaryVals = [...low, ...med, faceValue].filter(v => v > 0);
+        const minV = Math.floor(Math.min(...primaryVals) * 0.85);
+        const maxV = Math.ceil(Math.max(...primaryVals) * 1.15);
+        const rangeV = maxV - minV || 1;
+
+        const xScale = (i) => PAD.left + (i / Math.max(snapshots.length - 1, 1)) * plotW;
+        const yScale = (v) => PAD.top + plotH - ((v - minV) / rangeV) * plotH;
+        // Clamp y so highest line stays visible at top edge instead of flying off
+        const yScaleClamped = (v) => Math.max(PAD.top - 4, yScale(v));
+
+        function polyline(data, color, clamp) {
+            const yFn = clamp ? yScaleClamped : yScale;
+            const pts = data.map((v, i) => `${xScale(i).toFixed(1)},${yFn(v).toFixed(1)}`).join(' ');
+            return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+        }
+
+        function dots(data, color, clamp) {
+            if (data.length > 20) return '';
+            const yFn = clamp ? yScaleClamped : yScale;
+            return data.map((v, i) =>
+                `<circle cx="${xScale(i).toFixed(1)}" cy="${yFn(v).toFixed(1)}" r="3.5" fill="${color}" stroke="var(--bg-card)" stroke-width="1.5"/>`
+            ).join('');
+        }
+
+        // Invisible hover hit-areas for each data point index
+        let hoverZones = '';
+        const colW = plotW / Math.max(snapshots.length - 1, 1);
+        for (let i = 0; i < snapshots.length; i++) {
+            const x = xScale(i);
+            hoverZones += `<rect x="${(x - colW / 2).toFixed(1)}" y="${PAD.top}" width="${colW.toFixed(1)}" height="${plotH}" fill="transparent" data-idx="${i}" class="chart-hover-zone"/>`;
+        }
+
+        // Vertical crosshair (hidden by default)
+        const crosshair = `<line id="chartCrosshair" x1="0" y1="${PAD.top}" x2="0" y2="${PAD.top + plotH}" stroke="rgba(255,255,255,0.15)" stroke-width="1" style="display:none"/>`;
+
+        // Grid lines
+        const gridCount = 5;
+        let gridLines = '';
+        for (let i = 0; i <= gridCount; i++) {
+            const val = minV + (rangeV * i / gridCount);
+            const y = yScale(val);
+            gridLines += `<line x1="${PAD.left}" y1="${y.toFixed(1)}" x2="${W - PAD.right}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+            gridLines += `<text x="${PAD.left - 8}" y="${(y + 4).toFixed(1)}" text-anchor="end" fill="#55556a" font-size="10" font-family="Outfit,sans-serif">$${Math.round(val).toLocaleString()}</text>`;
+        }
+
+        // Face value reference line
+        const faceY = yScale(faceValue);
+        const faceLine = `
+            <line x1="${PAD.left}" y1="${faceY.toFixed(1)}" x2="${W - PAD.right}" y2="${faceY.toFixed(1)}" stroke="rgba(233,69,96,0.4)" stroke-width="1" stroke-dasharray="4,3"/>
+            <text x="${W - PAD.right + 2}" y="${(faceY + 3).toFixed(1)}" fill="#e94560" font-size="9" font-family="DM Sans,sans-serif">Face</text>
+        `;
+
+        // Date labels on x-axis
+        let dateLabels = '';
+        const labelCount = Math.min(snapshots.length, 6);
+        for (let i = 0; i < labelCount; i++) {
+            const idx = Math.round(i * (snapshots.length - 1) / Math.max(labelCount - 1, 1));
+            const x = xScale(idx);
+            const dateStr = dates[idx] || '';
+            const short = dateStr.slice(5, 10); // MM-DD
+            dateLabels += `<text x="${x.toFixed(1)}" y="${H - 5}" text-anchor="middle" fill="#55556a" font-size="9" font-family="DM Sans,sans-serif">${short}</text>`;
+        }
+
+        const svg = `
+            <div class="chart-svg-wrap">
+                <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+                    ${gridLines}
+                    ${faceLine}
+                    ${crosshair}
+                    ${polyline(high, '#a855f7', true)}
+                    ${polyline(med, '#f5c518', false)}
+                    ${polyline(low, '#3b82f6', false)}
+                    ${dots(high, '#a855f7', true)}
+                    ${dots(med, '#f5c518', false)}
+                    ${dots(low, '#3b82f6', false)}
+                    ${dateLabels}
+                    ${hoverZones}
+                </svg>
+                <div class="chart-tooltip" id="chartTooltip"></div>
+            </div>
+            <div class="chart-legend">
+                <span class="chart-legend-item"><span class="chart-legend-dot" style="background:#3b82f6"></span>Lowest</span>
+                <span class="chart-legend-item"><span class="chart-legend-dot" style="background:#f5c518"></span>Median</span>
+                <span class="chart-legend-item"><span class="chart-legend-dot" style="background:#a855f7"></span>Highest</span>
+                <span class="chart-legend-item"><span class="chart-legend-dot" style="background:#e94560;opacity:0.5"></span>Face Value</span>
+            </div>
+            <div class="chart-stats">
+                <div class="chart-stat">
+                    <div class="chart-stat-value">$${(low[low.length-1] || 0).toLocaleString() || '—'}</div>
+                    <div class="chart-stat-label">Current Low</div>
+                </div>
+                <div class="chart-stat">
+                    <div class="chart-stat-value">$${(med[med.length-1] || 0).toLocaleString() || '—'}</div>
+                    <div class="chart-stat-label">Current Median</div>
+                </div>
+                <div class="chart-stat">
+                    <div class="chart-stat-value">${snapshots.length}</div>
+                    <div class="chart-stat-label">Data Points</div>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('chartBody').innerHTML = svg;
+
+        // Wire up hover tooltips
+        const wrap = document.querySelector('.chart-svg-wrap');
+        const tip = document.getElementById('chartTooltip');
+        const crosshairEl = document.getElementById('chartCrosshair');
+        const svgEl = wrap.querySelector('svg');
+
+        wrap.addEventListener('mouseleave', () => {
+            tip.classList.remove('visible');
+            crosshairEl.style.display = 'none';
+        });
+
+        wrap.querySelectorAll('.chart-hover-zone').forEach(zone => {
+            zone.addEventListener('mouseenter', (e) => {
+                const idx = parseInt(zone.dataset.idx);
+                const dateStr = dates[idx] || '';
+                const dateFmt = dateStr.slice(0, 16).replace('T', ' '); // YYYY-MM-DD HH:MM
+
+                // Show crosshair
+                const cx = xScale(idx);
+                crosshairEl.setAttribute('x1', cx.toFixed(1));
+                crosshairEl.setAttribute('x2', cx.toFixed(1));
+                crosshairEl.style.display = '';
+
+                // Build tooltip
+                tip.innerHTML = `
+                    <div class="chart-tooltip-date">${dateFmt}</div>
+                    <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#3b82f6"></span>Lowest: <span class="chart-tooltip-val">$${(low[idx] || 0).toLocaleString()}</span></div>
+                    <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#f5c518"></span>Median: <span class="chart-tooltip-val">$${(med[idx] || 0).toLocaleString()}</span></div>
+                    <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#a855f7"></span>Highest: <span class="chart-tooltip-val">$${(high[idx] || 0).toLocaleString()}</span></div>
+                `;
+                tip.classList.add('visible');
+
+                // Position tooltip relative to the svg-wrap container
+                const wrapRect = wrap.getBoundingClientRect();
+                const svgRect = svgEl.getBoundingClientRect();
+                const scaleX = svgRect.width / W;
+                const tipX = (cx * scaleX) + (svgRect.left - wrapRect.left);
+                const tipW = tip.offsetWidth;
+                // Flip side if too close to right edge
+                const left = tipX + tipW + 12 > wrapRect.width
+                    ? tipX - tipW - 12
+                    : tipX + 12;
+                tip.style.left = left + 'px';
+                tip.style.top = '20px';
+            });
+        });
+    }
+
+    // Close chart on Escape
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeChart(); });
+
+    // Close score tooltips when clicking outside
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.score-ring-wrap.show-tooltip').forEach(el => el.classList.remove('show-tooltip'));
+    });
+
+    // ─── Init ───
+    loadData();
+    setInterval(loadData, 300000);
+    </script>
+</body>
+</html>

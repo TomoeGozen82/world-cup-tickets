@@ -227,7 +227,7 @@ def discover() -> int:
         if not events:
             return 0
 
-        db_matches = [dict(m) for m in get_all_matches()]
+        db_matches = get_all_matches()
         mapped = 0
 
         for ev in events:
@@ -288,7 +288,7 @@ def collect_prices() -> int:
     prod_to_match = {row["seatgeek_id"]: row["id"] for row in mapped}
 
     # We need the URLs — fetch from DB
-    all_matches = {dict(m)["id"]: dict(m) for m in get_all_matches()}
+    all_matches = {m["id"]: m for m in get_all_matches()}
 
     updated = 0
     with httpx.Client(headers=HEADERS, follow_redirects=True) as client:

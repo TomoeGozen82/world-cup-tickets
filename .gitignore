@@ -5,3 +5,5 @@ __pycache__/
 db/tickets.db
 .env
 *.egg-info/
+.vercel/
+.vercel
