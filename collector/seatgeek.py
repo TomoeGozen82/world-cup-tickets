@@ -30,7 +30,19 @@ HEADERS = {
     "Referer": "https://www.vividseats.com/",
 }
 
-SEARCH_URL = "https://www.vividseats.com/search?searchTerm=FIFA+World+Cup"
+BASE_SEARCH_URL = "https://www.vividseats.com/search?searchTerm="
+
+
+def _get_search_terms(db_matches: list[dict]) -> list[str]:
+    """Build per-team search terms to get full coverage of all matches."""
+    teams = set()
+    for m in db_matches:
+        for side in ("home_team", "away_team"):
+            team = m.get(side, "")
+            if team and team != "TBD":
+                teams.add(team)
+    # Build search queries like "Ecuador+World+Cup"
+    return [f"{team.replace(' ', '+')}+World+Cup" for team in sorted(teams)]
 
 
 def _parse_jsonld(html: str) -> dict | None:
@@ -62,34 +74,37 @@ def _parse_average(html: str) -> int | None:
     return None
 
 
-def _discover_events(client: httpx.Client) -> list[dict]:
-    """Scrape Vivid Seats search page for all World Cup event links."""
-    try:
-        resp = client.get(SEARCH_URL, timeout=20)
-        resp.raise_for_status()
-    except Exception as e:
-        log.error(f"[vividseats] Search page failed: {e}")
-        return []
-
-    events = []
-    # Find all production links: /production/12345 or full URLs
-    for m in re.finditer(r'href="(/[^"]*?/production/(\d+))"', resp.text):
-        path, prod_id = m.group(1), int(m.group(2))
-        events.append({
-            "url": f"https://www.vividseats.com{path}",
-            "production_id": prod_id,
-        })
-
-    # Deduplicate by production_id
+def _discover_events(client: httpx.Client, search_terms: list[str]) -> list[dict]:
+    """Scrape Vivid Seats search pages for World Cup event links using per-team searches."""
     seen = set()
-    unique = []
-    for e in events:
-        if e["production_id"] not in seen:
-            seen.add(e["production_id"])
-            unique.append(e)
+    all_events = []
 
-    log.info(f"[vividseats] Found {len(unique)} events on search page")
-    return unique
+    for term in search_terms:
+        url = f"{BASE_SEARCH_URL}{term}"
+        try:
+            resp = client.get(url, timeout=20)
+            resp.raise_for_status()
+        except Exception as e:
+            log.warning(f"[vividseats] Search failed for '{term}': {e}")
+            continue
+
+        count = 0
+        for m in re.finditer(r'href="(/[^"]*?/production/(\d+))"', resp.text):
+            path, prod_id = m.group(1), int(m.group(2))
+            if prod_id not in seen:
+                seen.add(prod_id)
+                all_events.append({
+                    "url": f"https://www.vividseats.com{path}",
+                    "production_id": prod_id,
+                })
+                count += 1
+
+        if count:
+            log.info(f"[vividseats] '{term}': {count} new events")
+        time.sleep(0.5)  # rate limit between searches
+
+    log.info(f"[vividseats] Found {len(all_events)} unique events across {len(search_terms)} searches")
+    return all_events
 
 
 def _extract_prices(html: str, ld: dict | None) -> dict:
@@ -222,12 +237,14 @@ def _match_to_db(event: dict, db_matches: list[dict]) -> dict | None:
 
 def discover() -> int:
     """Discover Vivid Seats events and map them to DB matches."""
+    db_matches = get_all_matches()
+    search_terms = _get_search_terms(db_matches)
+
     with httpx.Client(headers=HEADERS, follow_redirects=True) as client:
-        events = _discover_events(client)
+        events = _discover_events(client, search_terms)
         if not events:
             return 0
 
-        db_matches = get_all_matches()
         mapped = 0
 
         for ev in events:
