@@ -91,6 +91,9 @@ def _discover_events(client: httpx.Client, search_terms: list[str]) -> list[dict
         count = 0
         for m in re.finditer(r'href="(/[^"]*?/production/(\d+))"', resp.text):
             path, prod_id = m.group(1), int(m.group(2))
+            # Skip parking, follow-my-team, and other non-match listings
+            if "parking" in path.lower() or "follow-my-team" in path.lower():
+                continue
             if prod_id not in seen:
                 seen.add(prod_id)
                 all_events.append({
@@ -193,43 +196,54 @@ def _normalize_name(name: str) -> str:
     return name
 
 
-def _dates_close(d1: str, d2: str) -> bool:
-    """Check if two date strings are within 1 day of each other (timezone tolerance)."""
-    try:
-        a = date.fromisoformat(d1[:10])
-        b = date.fromisoformat(d2[:10])
-        return abs((a - b).days) <= 1
-    except (ValueError, TypeError):
-        return False
+# Map our fixture team names to how they appear on Vivid Seats
+TEAM_ALIASES = {
+    "korea republic": ["korea", "south korea"],
+    "ir iran": ["iran"],
+    "côte d'ivoire": ["ivory coast", "cote d'ivoire", "cote divoire"],
+    "cabo verde": ["cape verde"],
+    "curaçao": ["curacao"],
+    "united states": ["usa", "u.s."],
+}
+
+
+def _team_in_event_name(team: str, ev_name: str) -> bool:
+    """Check if a team name (or any of its aliases) appears in the event name."""
+    team_lower = team.lower()
+    if team_lower in ev_name:
+        return True
+    aliases = TEAM_ALIASES.get(team_lower, [])
+    return any(alias in ev_name for alias in aliases)
 
 
 def _match_to_db(event: dict, db_matches: list[dict]) -> dict | None:
-    """Match a scraped event to a DB match by date + teams/venue."""
-    ev_date = event.get("start_date", "")[:10]
-    ev_name = event.get("name", "").lower()
-    ev_venue = _normalize_name(event.get("venue", ""))
+    """Match a scraped event to a DB match by team names only.
+
+    No venue/date fallback — our fixture venues may be stale vs what
+    ticket sites show, so matching by venue causes wrong mappings.
+    Requires BOTH teams to match (or one team + TBD opponent).
+    """
+    ev_name = _normalize_name(event.get("name", ""))
 
     for m in db_matches:
         if m.get("seatgeek_id"):
             continue  # already mapped
 
-        db_date = (m.get("match_date") or "")[:10]
+        home = (m.get("home_team") or "").strip()
+        away = (m.get("away_team") or "").strip()
 
-        # Must match on date (±1 day for timezone differences)
-        if not db_date or not _dates_close(db_date, ev_date):
+        if not home or not away:
             continue
 
-        # Try team name match
-        home = (m.get("home_team") or "").lower()
-        away = (m.get("away_team") or "").lower()
-        if home and home != "tbd" and home in ev_name:
-            return m
-        if away and away != "tbd" and away in ev_name:
-            return m
+        home_match = home != "TBD" and _team_in_event_name(home, ev_name)
+        away_match = away != "TBD" and _team_in_event_name(away, ev_name)
 
-        # Fallback: same date + venue contains match
-        db_venue = _normalize_name(m.get("venue") or "")
-        if db_venue and ev_venue and (db_venue in ev_venue or ev_venue in db_venue):
+        # Both teams must match, or one team matches and the other is TBD
+        if home_match and away_match:
+            return m
+        if home_match and away == "TBD":
+            return m
+        if away_match and home == "TBD":
             return m
 
     return None
