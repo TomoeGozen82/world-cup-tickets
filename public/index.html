@@ -1274,45 +1274,51 @@
         tickpick: '#22c55e',
     };
 
-    const PLATFORM_ORDER = ['vividseats', 'tickpick'];
-
     function renderPlatformCards(m) {
         const platforms = m.platform_prices || [];
-        const byKey = {};
-        platforms.forEach(p => { byKey[p.platform] = p; });
 
-        const withPrices = platforms.filter(p => p.lowest_price);
-        const cheapest = withPrices.length
-            ? withPrices.reduce((a, b) => (a.lowest_price < b.lowest_price ? a : b))
-            : null;
-
-        const cards = PLATFORM_ORDER.map(key => {
-            const p = byKey[key];
-            const hasListing = p && p.lowest_price && p.listing_url;
-            const isCheapest = hasListing && cheapest && key === cheapest.platform;
-            const tag = hasListing ? (p.is_transferable === 'yes' ? 'open' : '') : 'no-listing';
-
-            if (!hasListing) {
-                return `
-                    <div class="platform-card no-listing">
-                        <div class="platform-card-name">
-                            <span class="platform-card-dot" style="background:${PLATFORM_COLORS[key]}"></span>
-                            ${PLATFORM_NAMES[key]}
-                        </div>
-                        <div class="platform-card-price">No listing</div>
-                    </div>`;
+        // Build all price options: lowest + median from each platform
+        const options = [];
+        platforms.forEach(p => {
+            if (p.lowest_price && p.listing_url) {
+                options.push({
+                    platform: p.platform,
+                    price: p.lowest_price,
+                    url: p.listing_url,
+                    transferable: p.is_transferable === 'yes',
+                    label: PLATFORM_NAMES[p.platform] || p.platform,
+                });
             }
+            if (p.median_price && p.median_price > (p.lowest_price || 0) && p.listing_url) {
+                options.push({
+                    platform: p.platform,
+                    price: p.median_price,
+                    url: p.listing_url,
+                    transferable: p.is_transferable === 'yes',
+                    label: PLATFORM_NAMES[p.platform] || p.platform,
+                    tier: 'median',
+                });
+            }
+        });
 
+        // Sort by price ascending, take top 3
+        options.sort((a, b) => a.price - b.price);
+        const top3 = options.slice(0, 3);
+
+        if (top3.length === 0) return '';
+
+        const cards = top3.map((opt, i) => {
+            const isCheapest = i === 0 && top3.length > 1;
             return `
-                <a href="${p.listing_url}" target="_blank" rel="noopener"
+                <a href="${opt.url}" target="_blank" rel="noopener"
                    class="platform-card${isCheapest ? ' cheapest' : ''}">
                     <div class="platform-card-name">
-                        <span class="platform-card-dot" style="background:${PLATFORM_COLORS[key]}"></span>
-                        ${PLATFORM_NAMES[key]}
+                        <span class="platform-card-dot" style="background:${PLATFORM_COLORS[opt.platform] || '#888'}"></span>
+                        ${opt.label}${opt.tier ? ' (mid)' : ''}
                     </div>
-                    <div class="platform-card-price">$${p.lowest_price.toLocaleString()}</div>
-                    ${isCheapest && withPrices.length > 1 ? '<span class="platform-card-best">BEST</span>' : ''}
-                    ${p.is_transferable === 'yes' ? '<span class="platform-card-transfer">Transferable</span>' : ''}
+                    <div class="platform-card-price">$${opt.price.toLocaleString()}</div>
+                    ${isCheapest ? '<span class="platform-card-best">BEST</span>' : ''}
+                    ${opt.transferable ? '<span class="platform-card-transfer">Transferable</span>' : ''}
                 </a>`;
         }).join('');
 
