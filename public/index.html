@@ -519,7 +519,7 @@
         /* Prices */
         .platform-cards {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 0.45rem;
             margin-bottom: 0.65rem;
         }
@@ -1280,7 +1280,7 @@
     function renderPlatformCards(m) {
         const platforms = m.platform_prices || [];
 
-        // Build all price options: lowest + median from each platform
+        // Build price options: lowest from each platform
         const options = [];
         platforms.forEach(p => {
             if (p.lowest_price && p.listing_url) {
@@ -1292,32 +1292,21 @@
                     label: PLATFORM_NAMES[p.platform] || p.platform,
                 });
             }
-            if (p.median_price && p.median_price > (p.lowest_price || 0) && p.listing_url) {
-                options.push({
-                    platform: p.platform,
-                    price: p.median_price,
-                    url: p.listing_url,
-                    transferable: p.is_transferable === 'yes',
-                    label: PLATFORM_NAMES[p.platform] || p.platform,
-                    tier: 'median',
-                });
-            }
         });
 
-        // Sort by price ascending, take top 3
+        // Sort by price ascending
         options.sort((a, b) => a.price - b.price);
-        const top3 = options.slice(0, 3);
 
-        if (top3.length === 0) return '';
+        if (options.length === 0) return '';
 
-        const cards = top3.map((opt, i) => {
-            const isCheapest = i === 0 && top3.length > 1;
+        const cards = options.map((opt, i) => {
+            const isCheapest = i === 0 && options.length > 1;
             return `
                 <a href="${opt.url}" target="_blank" rel="noopener"
                    class="platform-card${isCheapest ? ' cheapest' : ''}">
                     <div class="platform-card-name">
                         <span class="platform-card-dot" style="background:${PLATFORM_COLORS[opt.platform] || '#888'}"></span>
-                        ${opt.label}${opt.tier ? ' (mid)' : ''}
+                        ${opt.label}
                     </div>
                     <div class="platform-card-price">$${opt.price.toLocaleString()}</div>
                     ${isCheapest ? '<span class="platform-card-best">BEST</span>' : ''}
