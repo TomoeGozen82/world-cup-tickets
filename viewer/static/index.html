@@ -1266,17 +1266,15 @@
     // ─── Platform Buy Cards ───
     const PLATFORM_NAMES = {
         vividseats: 'Vivid Seats',
-        stubhub: 'StubHub',
         tickpick: 'TickPick',
     };
 
     const PLATFORM_COLORS = {
         vividseats: '#a855f7',
-        stubhub: '#3b82f6',
         tickpick: '#22c55e',
     };
 
-    const PLATFORM_ORDER = ['vividseats', 'stubhub', 'tickpick'];
+    const PLATFORM_ORDER = ['vividseats', 'tickpick'];
 
     function renderPlatformCards(m) {
         const platforms = m.platform_prices || [];
