@@ -33,11 +33,9 @@ A real-time dashboard that tracks resale ticket prices across multiple platforms
 │   + API)     │     │  104 matches │     │  (Scrapers)  │
 └──────────────┘     └──────────────┘     └──────────────┘
                                                 │
-                                    ┌───────────┼───────────┐
-                                    ▼           ▼           ▼
-                              Vivid Seats   TickPick    StubHub*
-                                                      (*JS-rendered,
-                                                       needs headless)
+                                    ┌───────────┤
+                                    ▼           ▼
+                              Vivid Seats   TickPick
 ```
 
 ## Value Scoring
