@@ -11,6 +11,7 @@ import re
 
 import httpx
 
+from collector.matching import match_event_to_db
 from db.database import get_all_matches, upsert_platform_price
 
 log = logging.getLogger(__name__)
@@ -58,23 +59,6 @@ def _parse_all_events(html: str) -> list[dict]:
     return events
 
 
-def _match_event_to_db(event: dict, db_matches: list[dict]) -> dict | None:
-    """Match a scraped event to a DB match by date + team name."""
-    ev_date = event.get("start_date", "")[:10]
-    ev_name = event.get("name", "").lower()
-
-    for m in db_matches:
-        db_date = (m.get("match_date") or "")[:10]
-        if not db_date or db_date != ev_date:
-            continue
-        home = (m.get("home_team") or "").lower()
-        away = (m.get("away_team") or "").lower()
-        if home and home != "tbd" and home in ev_name:
-            return m
-        if away and away != "tbd" and away in ev_name:
-            return m
-    return None
-
 
 def collect() -> int:
     """Scrape TickPick category page for World Cup ticket prices."""
@@ -93,7 +77,13 @@ def collect() -> int:
         log.info(f"[tickpick] Parsed {len(events)} events from category page")
 
         for event in events:
-            match = _match_event_to_db(event, db_matches)
+            match = match_event_to_db(
+                event_name=event.get("name", ""),
+                event_date=event.get("start_date"),
+                db_matches=db_matches,
+                require_date=True,
+                require_both_teams=False,  # Preserve original behavior: single team + date is enough
+            )
             if not match:
                 continue
 

@@ -8,6 +8,7 @@ from datetime import date, timedelta
 
 import httpx
 
+from collector.matching import match_event_to_db
 from db.database import (
     get_all_matches,
     get_matches_with_seatgeek_id,
@@ -184,69 +185,6 @@ def _scrape_event(client: httpx.Client, url: str) -> dict | None:
     }
 
 
-def _normalize_name(name: str) -> str:
-    """Simplify team/event name for fuzzy matching."""
-    name = name.lower().strip()
-    # Remove common suffixes
-    for s in [
-        " mens national soccer", " national soccer", " national football",
-        " national team", " men's", " women's",
-    ]:
-        name = name.replace(s, "")
-    return name
-
-
-# Map our fixture team names to how they appear on Vivid Seats
-TEAM_ALIASES = {
-    "korea republic": ["korea", "south korea"],
-    "ir iran": ["iran"],
-    "côte d'ivoire": ["ivory coast", "cote d'ivoire", "cote divoire"],
-    "cabo verde": ["cape verde"],
-    "curaçao": ["curacao"],
-    "united states": ["usa", "u.s."],
-}
-
-
-def _team_in_event_name(team: str, ev_name: str) -> bool:
-    """Check if a team name (or any of its aliases) appears in the event name."""
-    team_lower = team.lower()
-    if team_lower in ev_name:
-        return True
-    aliases = TEAM_ALIASES.get(team_lower, [])
-    return any(alias in ev_name for alias in aliases)
-
-
-def _match_to_db(event: dict, db_matches: list[dict]) -> dict | None:
-    """Match a scraped event to a DB match by team names only.
-
-    No venue/date fallback — our fixture venues may be stale vs what
-    ticket sites show, so matching by venue causes wrong mappings.
-    Requires BOTH teams to match (or one team + TBD opponent).
-    """
-    ev_name = _normalize_name(event.get("name", ""))
-
-    for m in db_matches:
-        if m.get("seatgeek_id"):
-            continue  # already mapped
-
-        home = (m.get("home_team") or "").strip()
-        away = (m.get("away_team") or "").strip()
-
-        if not home or not away:
-            continue
-
-        home_match = home != "TBD" and _team_in_event_name(home, ev_name)
-        away_match = away != "TBD" and _team_in_event_name(away, ev_name)
-
-        # Both teams must match, or one team matches and the other is TBD
-        if home_match and away_match:
-            return m
-        if home_match and away == "TBD":
-            return m
-        if away_match and home == "TBD":
-            return m
-
-    return None
 
 
 def discover() -> int:
@@ -267,7 +205,12 @@ def discover() -> int:
             if not data:
                 continue
 
-            match = _match_to_db(data, db_matches)
+            match = match_event_to_db(
+                event_name=data.get("name", ""),
+                event_date=data.get("start_date"),
+                db_matches=db_matches,
+                skip_mapped=True,
+            )
             if match:
                 update_seatgeek_mapping(
                     match_id=match["id"],
