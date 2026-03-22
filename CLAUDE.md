@@ -3,7 +3,7 @@
 FIFA 2026 World Cup ticket investment tracker.
 
 ## Stack
-- FastAPI (Vercel serverless) + Turso (cloud SQLite) + GitHub Actions (scrapers)
+- FastAPI (Vercel serverless) + Turso (cloud SQLite) + GitHub Actions (scrapers) + Playwright (StubHub)
 - Single-page dashboard (DM Sans + Outfit fonts, custom CSS)
 - GitHub: https://github.com/jinsoowhang/world-cup-tickets
 
@@ -11,6 +11,7 @@ FIFA 2026 World Cup ticket investment tracker.
 - **Static fixtures** — all 104 matches hardcoded from FIFA's official schedule, seeded on startup
 - **Vivid Seats** (web scraping, JSON-LD) — resale ticket prices, refreshes every 6h
 - **TickPick** (web scraping, JSON-LD) — resale ticket prices (no buyer fees), refreshes every 6h
+- **StubHub** (Playwright headless scraping, JSON-LD) — resale ticket prices, refreshes every 6h
 
 ## Architecture
 ```
@@ -20,8 +21,10 @@ config.py              — All constants (face values, venue scores, team tiers)
 db/schema.sql          — SQLite schema (matches, price_snapshots, platform_prices)
 db/database.py         — CRUD operations (Turso/libsql)
 collector/fixtures.py  — Static fixture data (all 104 matches) + seeder
+collector/matching.py  — Shared team-name matching utilities
 collector/seatgeek.py  — Vivid Seats scraper (file named seatgeek.py for historical reasons)
 collector/tickpick.py  — TickPick scraper
+collector/stubhub.py   — StubHub scraper (Playwright headless browser)
 analysis/value.py      — Value scoring (0-100) + FIFA fee calculator
 public/index.html      — Single-page dashboard (all HTML/CSS/JS inline)
 scripts/scrape.py      — Standalone scraper (GitHub Actions)
