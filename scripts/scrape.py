@@ -19,11 +19,15 @@ log.info(f"Seeded {n} fixtures")
 
 score_all_matches()
 
-n = seatgeek.collect()
-log.info(f"Vivid Seats: {n} updates")
-
-n = tickpick.collect()
-log.info(f"TickPick: {n} updates")
+for name, collect_fn in [
+    ("Vivid Seats", seatgeek.collect),
+    ("TickPick", tickpick.collect),
+]:
+    try:
+        n = collect_fn()
+        log.info(f"{name}: {n} updates")
+    except Exception:
+        log.exception(f"{name}: scraper failed, continuing")
 
 score_all_matches()
 log.info("Done — all scores recalculated")
