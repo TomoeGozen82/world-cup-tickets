@@ -8,4 +8,5 @@ dependencies = [
     "feedparser>=6.0.12",
     "httpx>=0.28.1",
     "libsql-experimental>=0.0.55",
+    "playwright>=1.40",
 ]
