@@ -519,7 +519,7 @@
         /* Prices */
         .platform-cards {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
             gap: 0.45rem;
             margin-bottom: 0.65rem;
         }
@@ -1270,11 +1270,13 @@
     const PLATFORM_NAMES = {
         vividseats: 'Vivid Seats',
         tickpick: 'TickPick',
+        stubhub: 'StubHub',
     };
 
     const PLATFORM_COLORS = {
         vividseats: '#a855f7',
         tickpick: '#22c55e',
+        stubhub: '#3b82f6',
     };
 
     function renderPlatformCards(m) {
