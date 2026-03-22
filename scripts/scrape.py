@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0, ".")
 
 import db.database as db
-from collector import fixtures, seatgeek, tickpick
+from collector import fixtures, seatgeek, stubhub, tickpick
 from analysis.value import score_all_matches
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -22,6 +22,7 @@ score_all_matches()
 for name, collect_fn in [
     ("Vivid Seats", seatgeek.collect),
     ("TickPick", tickpick.collect),
+    ("StubHub", stubhub.collect),
 ]:
     try:
         n = collect_fn()
