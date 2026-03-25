@@ -71,6 +71,13 @@ ROUND_SCORES = {
 FIFA_BUYER_FEE = 0.15   # 15% buyer premium
 FIFA_SELLER_FEE = 0.15  # 15% seller fee (net = sale * 0.85)
 
+# Estimated platform buyer fees (approximate, for comparison purposes)
+PLATFORM_FEES = {
+    "vividseats": 0.28,   # ~28% buyer fees
+    "tickpick": 0.0,      # no buyer fees
+    "stubhub": 0.25,      # ~25% buyer fees
+}
+
 # Vivid Seats scraping (no API key needed)
 RESALE_POLL_HOURS = 6  # how often to scrape for price updates
 
