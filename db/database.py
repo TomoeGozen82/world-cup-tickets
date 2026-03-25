@@ -305,6 +305,14 @@ def get_latest_platform_prices(match_id: int) -> list[dict]:
         return [_row_to_dict(cursor, r) for r in rows]
 
 
+def get_latest_scrape_time() -> str | None:
+    """Get the most recent fetched_at timestamp across all platform prices."""
+    with get_conn() as conn:
+        cursor = conn.execute("SELECT MAX(fetched_at) FROM platform_prices")
+        row = cursor.fetchone()
+        return row[0] if row else None
+
+
 def get_all_latest_platform_prices() -> dict[int, list[dict]]:
     """Get latest prices per platform for ALL matches. Returns {match_id: [prices]}."""
     with get_conn() as conn:

@@ -107,6 +107,94 @@ def score_match(match: dict, breakdown: bool = False) -> int | dict:
     return {"total": total, "factors": factors}
 
 
+def score_match_buyer(match: dict, breakdown: bool = False) -> int | dict:
+    """
+    Calculate buyer deal score (0-100) — high score means good deal (low markup).
+
+    Weights:
+      - Deal quality: 50% (low markup = high score, inverted from reseller score)
+      - Round significance: 20%
+      - Venue desirability: 10%
+      - Team popularity: 10%
+      - Country: 10%
+    """
+    has_resale = bool(match.get("resale_median"))
+
+    w_round, w_venue, w_team, w_country, w_deal = 0.20, 0.10, 0.10, 0.10, 0.50
+
+    # Round significance
+    round_name = match.get("round", "Group")
+    round_raw = ROUND_SCORES.get(round_name, 30)
+    round_score = round_raw * w_round
+
+    # Venue desirability
+    venue = match.get("venue", "")
+    venue_raw = VENUE_SCORES.get(venue, 65)
+    venue_score = venue_raw * w_venue
+
+    # Team popularity
+    teams = {match.get("home_team", ""), match.get("away_team", "")}
+    teams.discard(None)
+    teams.discard("TBD")
+    team_raw = 0
+    team_detail = "Unknown"
+    for team in teams:
+        if team in POPULAR_TEAMS["tier1"]:
+            team_raw = max(team_raw, 100)
+        elif team in POPULAR_TEAMS["tier2"]:
+            team_raw = max(team_raw, 70)
+        else:
+            team_raw = max(team_raw, 40)
+    if not teams:
+        team_raw = 50
+    if team_raw == 100:
+        team_detail = "Tier 1"
+    elif team_raw == 70:
+        team_detail = "Tier 2"
+    elif team_raw == 50:
+        team_detail = "TBD"
+    else:
+        team_detail = "Tier 3"
+    team_score = team_raw * w_team
+
+    # Country factor
+    country = match.get("country", "USA")
+    if country == "Mexico":
+        country_raw = 0
+    elif country == "Canada":
+        country_raw = 80
+    else:
+        country_raw = 100
+    country_score = country_raw * w_country
+
+    # Deal quality — low markup = high score (inverted from reseller)
+    deal_raw = 50  # default when no resale data
+    deal_detail = "No data"
+    if has_resale:
+        face = match.get("face_value_cat3") or 100
+        median = match["resale_median"]
+        markup_pct = ((median - face) / face) * 100 if face > 0 else 0
+        # 0% markup = 100 (best deal), 200%+ markup = 0 (bad deal)
+        deal_raw = max(0, min(100, 100 - markup_pct * 0.5))
+        deal_detail = f"+{int(markup_pct)}%" if markup_pct >= 0 else f"{int(markup_pct)}%"
+    deal_score = deal_raw * w_deal
+
+    total = min(100, max(0, int(round_score + venue_score + team_score + country_score + deal_score)))
+
+    if not breakdown:
+        return total
+
+    factors = [
+        {"name": "Deal", "score": int(deal_score), "max": int(w_deal * 100), "detail": deal_detail},
+        {"name": "Round", "score": int(round_score), "max": int(w_round * 100), "detail": round_name},
+        {"name": "Venue", "score": int(venue_score), "max": int(w_venue * 100), "detail": venue or "Unknown"},
+        {"name": "Team", "score": int(team_score), "max": int(w_team * 100), "detail": team_detail},
+        {"name": "Country", "score": int(country_score), "max": int(w_country * 100), "detail": country},
+    ]
+
+    return {"total": total, "factors": factors}
+
+
 def calculate_fee(purchase_price: float, sale_price: float) -> dict:
     """
     Calculate net profit after FIFA Exchange fees.
