@@ -274,17 +274,25 @@
             gap: 0.4rem;
             cursor: pointer;
             user-select: none;
+            min-height: 44px;
+            padding: 0.2rem 0;
         }
         .resale-toggle input[type="checkbox"] {
             accent-color: var(--gold);
-            width: 14px;
-            height: 14px;
+            width: 18px;
+            height: 18px;
             cursor: pointer;
         }
         .resale-toggle-label {
             font-size: 0.78rem;
             color: var(--text-secondary);
             white-space: nowrap;
+        }
+
+        .filter-count-display {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
         }
 
         /* ── Match Grid ── */
@@ -588,13 +596,32 @@
             font-weight: 400;
         }
         .platform-card-best {
-            font-size: 0.52rem;
+            font-size: 0.7rem;
             font-weight: 700;
             color: #4ade80;
             background: rgba(34,197,94,0.15);
             padding: 0.05rem 0.3rem;
             border-radius: 3px;
             letter-spacing: 0.04em;
+        }
+        .platform-card-fee {
+            font-size: 0.52rem;
+            color: var(--text-muted);
+        }
+        .platform-card-fee.no-fee {
+            color: #4ade80;
+        }
+        .platform-card-raw {
+            font-size: 0.52rem;
+            color: var(--text-muted);
+            font-family: 'Outfit', sans-serif;
+        }
+        .platform-card-time {
+            font-size: 0.5rem;
+            color: var(--text-muted);
+        }
+        .platform-card-time.stale {
+            color: #f97316;
         }
         .platform-card-transfer {
             font-size: 0.55rem;
@@ -767,15 +794,145 @@
         }
         .empty-state.show { display: block; }
 
+        /* ── Mode Toggle (Buyer/Reseller) ── */
+        .mode-toggle {
+            display: flex;
+            gap: 0;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .mode-btn {
+            padding: 0.35rem 0.75rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .mode-btn.active {
+            background: var(--accent);
+            color: #fff;
+        }
+        .mode-btn:not(.active):hover {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-secondary);
+        }
+
+        /* ── View Toggle (Grid/Table) ── */
+        .view-toggle {
+            display: flex;
+            gap: 0;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .view-btn {
+            padding: 0.3rem 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .view-btn.active {
+            background: rgba(255,255,255,0.1);
+            color: var(--text-primary);
+        }
+
+        /* ── Match Table ── */
+        .match-table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .match-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+        }
+        .match-table th {
+            padding: 0.5rem 0.6rem;
+            text-align: left;
+            color: var(--text-muted);
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .match-table th:hover {
+            color: var(--text-secondary);
+        }
+        .match-table th.sorted {
+            color: var(--gold);
+        }
+        .match-table td {
+            padding: 0.45rem 0.6rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            white-space: nowrap;
+            color: var(--text-secondary);
+        }
+        .match-table tr:hover td {
+            background: rgba(255,255,255,0.03);
+        }
+        .match-table .price-best {
+            color: #4ade80;
+            font-weight: 600;
+        }
+        .match-table .price-cell {
+            font-family: 'Outfit', sans-serif;
+            color: var(--gold);
+        }
+        .match-table .score-cell {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+        }
+
+        /* ── Filter Toggle (mobile) ── */
+        .filter-toggle-btn {
+            display: none;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .filter-toggle-btn:hover {
+            background: rgba(255,255,255,0.08);
+        }
+        .filter-collapsible {
+            display: contents; /* On desktop, children flow into parent flex */
+        }
+
         /* ── Responsive ── */
         @media (max-width: 768px) {
             .stats-bar { grid-template-columns: repeat(2, 1fr); }
             .match-grid { grid-template-columns: 1fr; }
             .header-inner { flex-direction: column; align-items: flex-start; }
             .header-right { width: 100%; justify-content: space-between; }
-            .filter-bar { gap: 0.4rem; }
-            .filter-input { width: 100%; order: 10; }
-            .filter-select { width: 100%; order: 11; }
+            .filter-bar { gap: 0.4rem; flex-wrap: wrap; }
+            .filter-input { flex: 1; min-width: 0; }
+            .filter-toggle-btn { display: block; }
+            .filter-collapsible {
+                display: none;
+                width: 100%;
+                flex-wrap: wrap;
+                gap: 0.4rem;
+            }
+            .filter-collapsible.open {
+                display: flex;
+            }
+            .filter-select { width: 100%; }
             .filter-spacer { display: none; }
         }
         @media (max-width: 480px) {
@@ -948,18 +1105,19 @@
                 <h1>FIFA World Cup 2026</h1>
                 <div class="header-subtitle">
                     <span class="live-dot"></span>
-                    <span>Ticket Investment Tracker</span>
+                    <span id="subtitleText">Ticket Price Tracker</span>
                 </div>
             </div>
             <div class="header-right">
+                <div class="mode-toggle">
+                    <button class="mode-btn active" data-mode="buyer" onclick="setMode('buyer')">Buyer</button>
+                    <button class="mode-btn" data-mode="reseller" onclick="setMode('reseller')">Reseller</button>
+                </div>
                 <div class="countdown-box">
                     <div class="countdown-label">Kickoff in</div>
                     <div class="countdown-value" id="countdown">--d --h --m</div>
                 </div>
-                <div>
-                    <div class="update-time" id="lastUpdate"></div>
-                    <button class="btn-refresh" onclick="refreshData()">Refresh</button>
-                </div>
+                <div class="update-time" id="lastScraped">Loading...</div>
             </div>
         </div>
     </header>
@@ -990,31 +1148,39 @@
         <!-- Matches Tab -->
         <div id="tab-matches" class="tab-content active">
             <div class="filter-bar">
-                <button class="filter-btn active" data-filter="all">All</button>
-                <button class="filter-btn" data-filter="Group">Group</button>
-                <button class="filter-btn" data-filter="Round of 32">R32</button>
-                <button class="filter-btn" data-filter="Round of 16">R16</button>
-                <button class="filter-btn" data-filter="Quarter-final">QF</button>
-                <button class="filter-btn" data-filter="Semi-final">SF</button>
-                <button class="filter-btn" data-filter="Final">Final</button>
-                <span class="filter-spacer"></span>
                 <input id="teamSearch" type="text" placeholder="Search team…" class="filter-input" oninput="filterMatches()">
-                <select id="sortSelect" class="filter-select" onchange="filterMatches()">
-                    <option value="score">Sort: Value Score</option>
-                    <option value="date">Sort: Date</option>
-                    <option value="price">Sort: Price</option>
-                </select>
-                <select id="countryFilter" class="filter-select" onchange="filterMatches()">
-                    <option value="">All Countries</option>
-                    <option value="USA">USA</option>
-                    <option value="Canada">Canada</option>
-                    <option value="Mexico">Mexico</option>
-                </select>
-                <label class="resale-toggle">
-                    <input type="checkbox" id="resaleOnly" checked onchange="filterMatches()">
-                    <span class="resale-toggle-label">Resale only</span>
-                </label>
+                <button class="filter-toggle-btn" id="filterToggle" onclick="toggleFilters()">Filters</button>
+                <div class="filter-collapsible" id="filterCollapsible">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="Group">Group</button>
+                    <button class="filter-btn" data-filter="Round of 32">R32</button>
+                    <button class="filter-btn" data-filter="Round of 16">R16</button>
+                    <button class="filter-btn" data-filter="Quarter-final">QF</button>
+                    <button class="filter-btn" data-filter="Semi-final">SF</button>
+                    <button class="filter-btn" data-filter="Final">Final</button>
+                    <span class="filter-spacer"></span>
+                    <select id="sortSelect" class="filter-select" onchange="filterMatches()">
+                        <option value="score">Sort: Score</option>
+                        <option value="date">Sort: Date</option>
+                        <option value="price">Sort: Lowest Price</option>
+                    </select>
+                    <div class="view-toggle">
+                        <button class="view-btn active" data-view="grid" onclick="setView('grid')" title="Card view">&#9638;</button>
+                        <button class="view-btn" data-view="table" onclick="setView('table')" title="Table view">&#9776;</button>
+                    </div>
+                    <select id="countryFilter" class="filter-select" onchange="filterMatches()">
+                        <option value="">All Countries</option>
+                        <option value="USA">USA</option>
+                        <option value="Canada">Canada</option>
+                        <option value="Mexico">Mexico</option>
+                    </select>
+                    <label class="resale-toggle">
+                        <input type="checkbox" id="resaleOnly" onchange="filterMatches()">
+                        <span class="resale-toggle-label">Resale only</span>
+                    </label>
+                </div>
             </div>
+            <div class="filter-count-display" id="filterCount"></div>
 
             <div id="matchGrid" class="match-grid">
                 <div class="skeleton-card"><div class="skeleton-bar"></div><div class="skeleton-body"><div class="skeleton-line w60"></div><div class="skeleton-line h24 w80"></div><div class="skeleton-line w40"></div></div></div>
@@ -1043,6 +1209,8 @@
     <script>
     // ─── Data & State ───
     let allMatches = [];
+    let currentMode = 'buyer';   // 'buyer' or 'reseller'
+    let currentView = 'grid';     // 'grid' or 'table'
 
     // ─── Team → ISO Code Mapping ───
     const TEAM_ISO = {
@@ -1105,6 +1273,7 @@
     }
 
     const FACTOR_COLORS = {
+        Deal: '#4ade80',
         Round: '#3b82f6',
         Venue: '#a855f7',
         Team: '#22c55e',
@@ -1202,6 +1371,88 @@
     setInterval(updateCountdown, 60000);
 
 
+    // ─── Mobile Filter Toggle ───
+    function toggleFilters() {
+        document.getElementById('filterCollapsible').classList.toggle('open');
+    }
+
+    // ─── Mode Toggle (Buyer/Reseller) ───
+    function setMode(mode) {
+        currentMode = mode;
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+        document.getElementById('subtitleText').textContent = mode === 'buyer' ? 'Ticket Deal Finder' : 'Ticket Investment Tracker';
+        // Update sort label
+        const scoreOpt = document.querySelector('#sortSelect option[value="score"]');
+        if (scoreOpt) scoreOpt.textContent = mode === 'buyer' ? 'Sort: Deal Score' : 'Sort: Investment Score';
+        filterMatches();
+    }
+
+    // ─── View Toggle (Grid/Table) ───
+    function setView(view) {
+        currentView = view;
+        document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+        filterMatches();
+    }
+
+    function getScore(m) {
+        return currentMode === 'buyer' ? (m.buyer_score || 0) : (m.value_score || 0);
+    }
+
+    function getBreakdown(m) {
+        return currentMode === 'buyer' ? (m.buyer_breakdown || []) : (m.score_breakdown || []);
+    }
+
+    // ─── Table Rendering ───
+    function renderTable(matches) {
+        const getLowestAllIn = (m) => {
+            const prices = (m.platform_prices || []).filter(p => p.estimated_all_in).map(p => p.estimated_all_in);
+            return prices.length ? Math.min(...prices) : null;
+        };
+        const getPlatformPrice = (m, platform) => {
+            const p = (m.platform_prices || []).find(pp => pp.platform === platform);
+            return p ? (p.estimated_all_in || p.lowest_price) : null;
+        };
+        const bestPrice = (m) => getLowestAllIn(m);
+        const markup = (m) => {
+            const best = bestPrice(m);
+            const face = m.face_value_cat3 || 100;
+            return best ? Math.round(((best - face) / face) * 100) : null;
+        };
+
+        const rows = matches.map(m => {
+            const best = bestPrice(m);
+            const vs = getPlatformPrice(m, 'vividseats');
+            const tp = getPlatformPrice(m, 'tickpick');
+            const sh = getPlatformPrice(m, 'stubhub');
+            const mk = markup(m);
+            const score = getScore(m);
+            const isBest = (val) => val && val === best;
+            const fmtPrice = (val) => val ? `$${val.toLocaleString()}` : '—';
+
+            return `<tr>
+                <td>${(m.home_team || 'TBD')} vs ${(m.away_team || 'TBD')}</td>
+                <td>${m.match_date ? new Date(m.match_date).toLocaleDateString('en-US', {month:'short',day:'numeric'}) : '—'}</td>
+                <td>${m.round || '—'}</td>
+                <td>${m.venue || '—'}</td>
+                <td class="price-cell${isBest(vs) ? ' price-best' : ''}">${fmtPrice(vs)}</td>
+                <td class="price-cell${isBest(tp) ? ' price-best' : ''}">${fmtPrice(tp)}</td>
+                <td class="price-cell${isBest(sh) ? ' price-best' : ''}">${fmtPrice(sh)}</td>
+                <td class="price-cell">${best ? fmtPrice(best) : '—'}</td>
+                <td>${mk !== null ? mk + '%' : '—'}</td>
+                <td class="score-cell" style="color:${score >= 65 ? '#4ade80' : score >= 40 ? '#fbbf24' : '#f87171'}">${score}</td>
+            </tr>`;
+        }).join('');
+
+        return `<div class="match-table-wrap"><table class="match-table">
+            <thead><tr>
+                <th>Match</th><th>Date</th><th>Round</th><th>Venue</th>
+                <th>Vivid Seats</th><th>TickPick</th><th>StubHub</th>
+                <th>Best</th><th>Markup</th><th>Score</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+        </table></div>`;
+    }
+
     // ─── Filter Buttons ───
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1215,7 +1466,7 @@
     function renderMatchCard(m, index) {
         const rc = getRoundColor(m.round);
         const delay = Math.min(index, 10) * 50;
-        const isHigh = m.value_score >= 75;
+        const isHigh = getScore(m) >= 75;
         const venueIso = COUNTRY_ISO[m.country];
 
         const mexicoAlert = m.is_mexico_venue ? `
@@ -1230,7 +1481,7 @@
                 <div class="card-body">
                     <div class="card-header">
                         <span class="round-tag" style="background:${rc.bg};color:${rc.text}">${ROUND_LABELS[m.round] || m.round}</span>
-                        ${scoreRing(m.value_score, m.score_breakdown)}
+                        ${scoreRing(getScore(m), getBreakdown(m))}
                     </div>
 
                     <div class="teams-row">
@@ -1279,30 +1530,50 @@
         stubhub: '#3b82f6',
     };
 
+    const ALL_PLATFORMS = ['vividseats', 'tickpick', 'stubhub'];
+
     function renderPlatformCards(m) {
         const platforms = m.platform_prices || [];
 
         // Build price options: lowest from each platform
         const options = [];
+        const seenPlatforms = new Set();
         platforms.forEach(p => {
+            seenPlatforms.add(p.platform);
             if (p.lowest_price && p.listing_url) {
                 options.push({
                     platform: p.platform,
                     price: p.lowest_price,
+                    allIn: p.estimated_all_in || p.lowest_price,
+                    feePct: p.fee_pct || 0,
                     url: p.listing_url,
                     transferable: p.is_transferable === 'yes',
                     label: PLATFORM_NAMES[p.platform] || p.platform,
+                    fetchedAt: p.fetched_at,
                 });
             }
         });
 
-        // Sort by price ascending
-        options.sort((a, b) => a.price - b.price);
-
-        if (options.length === 0) return '';
+        // Sort by estimated all-in price ascending
+        options.sort((a, b) => a.allIn - b.allIn);
 
         const cards = options.map((opt, i) => {
             const isCheapest = i === 0 && options.length > 1;
+            const hasFees = opt.feePct > 0;
+            const feeLabel = hasFees
+                ? `<span class="platform-card-fee">+${Math.round(opt.feePct * 100)}% fees</span>`
+                : `<span class="platform-card-fee no-fee">No fees</span>`;
+            const priceDisplay = hasFees
+                ? `<div class="platform-card-price">~$${opt.allIn.toLocaleString()}</div>
+                   <div class="platform-card-raw">$${opt.price.toLocaleString()} before fees</div>`
+                : `<div class="platform-card-price">$${opt.price.toLocaleString()}</div>`;
+            // Timestamp with stale warning (>12h)
+            let timeHtml = '';
+            if (opt.fetchedAt) {
+                const ageMs = Date.now() - new Date(opt.fetchedAt + 'Z').getTime();
+                const isStale = ageMs > 12 * 60 * 60 * 1000;
+                timeHtml = `<span class="platform-card-time${isStale ? ' stale' : ''}">${relativeTime(opt.fetchedAt)}</span>`;
+            }
             return `
                 <a href="${opt.url}" target="_blank" rel="noopener"
                    class="platform-card${isCheapest ? ' cheapest' : ''}">
@@ -1310,13 +1581,28 @@
                         <span class="platform-card-dot" style="background:${PLATFORM_COLORS[opt.platform] || '#888'}"></span>
                         ${opt.label}
                     </div>
-                    <div class="platform-card-price">$${opt.price.toLocaleString()}</div>
+                    ${priceDisplay}
+                    ${feeLabel}
                     ${isCheapest ? '<span class="platform-card-best">BEST</span>' : ''}
                     ${opt.transferable ? '<span class="platform-card-transfer">Transferable</span>' : ''}
+                    ${timeHtml}
                 </a>`;
         }).join('');
 
-        return `<div class="platform-cards">${cards}</div>`;
+        // Add "No listings" cards for platforms without data
+        const missingCards = ALL_PLATFORMS
+            .filter(p => !seenPlatforms.has(p) || !options.some(o => o.platform === p))
+            .map(p => `
+                <div class="platform-card no-listing">
+                    <div class="platform-card-name">
+                        <span class="platform-card-dot" style="background:${PLATFORM_COLORS[p] || '#888'}"></span>
+                        ${PLATFORM_NAMES[p] || p}
+                    </div>
+                    <div class="platform-card-price">No listings</div>
+                </div>`).join('');
+
+        const allCards = cards + missingCards;
+        return allCards ? `<div class="platform-cards">${allCards}</div>` : '';
     }
 
     // ─── Filter & Sort ───
@@ -1350,19 +1636,35 @@
         if (sort === 'date') {
             filtered.sort((a, b) => (a.match_date || '').localeCompare(b.match_date || ''));
         } else if (sort === 'price') {
-            filtered.sort((a, b) => (b.face_value_cat1 || 0) - (a.face_value_cat1 || 0));
+            const getLowestAllIn = (m) => {
+                const prices = (m.platform_prices || [])
+                    .filter(p => p.estimated_all_in)
+                    .map(p => p.estimated_all_in);
+                return prices.length ? Math.min(...prices) : Infinity;
+            };
+            filtered.sort((a, b) => getLowestAllIn(a) - getLowestAllIn(b));
         } else {
-            filtered.sort((a, b) => (b.value_score || 0) - (a.value_score || 0));
+            filtered.sort((a, b) => getScore(b) - getScore(a));
         }
 
         const grid = document.getElementById('matchGrid');
         const noMsg = document.getElementById('noMatches');
+        // Update filter count display
+        document.getElementById('filterCount').textContent =
+            `Showing ${filtered.length} of ${totalCount} matches`;
         if (filtered.length === 0) {
             grid.innerHTML = '';
+            grid.className = 'match-grid';
             noMsg.classList.add('show');
         } else {
             noMsg.classList.remove('show');
-            grid.innerHTML = filtered.map((m, i) => renderMatchCard(m, i)).join('');
+            if (currentView === 'table') {
+                grid.className = '';
+                grid.innerHTML = renderTable(filtered);
+            } else {
+                grid.className = 'match-grid';
+                grid.innerHTML = filtered.map((m, i) => renderMatchCard(m, i)).join('');
+            }
         }
 
         // Update filter counts
@@ -1389,31 +1691,33 @@
     // ─── Stats ───
     function updateStats() {
         document.getElementById('statTotal').textContent = allMatches.length;
-        document.getElementById('statHighValue').textContent = allMatches.filter(m => m.value_score >= 65).length;
-        const avg = allMatches.length ? Math.round(allMatches.reduce((s, m) => s + (m.value_score || 0), 0) / allMatches.length) : 0;
+        document.getElementById('statHighValue').textContent = allMatches.filter(m => getScore(m) >= 65).length;
+        const avg = allMatches.length ? Math.round(allMatches.reduce((s, m) => s + getScore(m), 0) / allMatches.length) : 0;
         document.getElementById('statAvgScore').textContent = avg;
     }
 
     // ─── Data Loading ───
+    let totalCount = 0;
+
     async function loadData() {
         try {
             const res = await fetch('/api/analysis/scores');
-            allMatches = await res.json();
+            const data = await res.json();
+            allMatches = data.matches;
+            totalCount = allMatches.length;
             updateStats();
             updateFilterCounts();
             filterMatches();
-            document.getElementById('lastUpdate').textContent = 'Updated ' + new Date().toLocaleTimeString();
+            // Show data freshness from last scrape time
+            const scraped = data.last_scraped;
+            const el = document.getElementById('lastScraped');
+            if (scraped) {
+                el.textContent = 'Data from ' + relativeTime(scraped);
+            } else {
+                el.textContent = 'No price data yet';
+            }
         } catch (e) {
             console.error('Failed to load data:', e);
-        }
-    }
-
-    async function refreshData() {
-        try {
-            await fetch('/api/refresh', { method: 'POST' });
-            setTimeout(loadData, 3000);
-        } catch (e) {
-            console.error('Refresh failed:', e);
         }
     }
 
@@ -1541,7 +1845,7 @@
             </div>
             <div class="chart-legend">
                 <span class="chart-legend-item"><span class="chart-legend-dot" style="background:#3b82f6"></span>Lowest</span>
-                <span class="chart-legend-item"><span class="chart-legend-dot" style="background:#f5c518"></span>Median</span>
+                <span class="chart-legend-item"><span class="chart-legend-dot" style="background:#f5c518"></span>Average</span>
                 <span class="chart-legend-item"><span class="chart-legend-dot" style="background:#a855f7"></span>Highest</span>
                 <span class="chart-legend-item"><span class="chart-legend-dot" style="background:#e94560;opacity:0.5"></span>Face Value</span>
             </div>
@@ -1552,7 +1856,7 @@
                 </div>
                 <div class="chart-stat">
                     <div class="chart-stat-value">$${(med[med.length-1] || 0).toLocaleString() || '—'}</div>
-                    <div class="chart-stat-label">Current Median</div>
+                    <div class="chart-stat-label">Current Avg</div>
                 </div>
                 <div class="chart-stat">
                     <div class="chart-stat-value">${snapshots.length}</div>
@@ -1590,7 +1894,7 @@
                 tip.innerHTML = `
                     <div class="chart-tooltip-date">${dateFmt}</div>
                     <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#3b82f6"></span>Lowest: <span class="chart-tooltip-val">$${(low[idx] || 0).toLocaleString()}</span></div>
-                    <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#f5c518"></span>Median: <span class="chart-tooltip-val">$${(med[idx] || 0).toLocaleString()}</span></div>
+                    <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#f5c518"></span>Avg: <span class="chart-tooltip-val">$${(med[idx] || 0).toLocaleString()}</span></div>
                     <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#a855f7"></span>Highest: <span class="chart-tooltip-val">$${(high[idx] || 0).toLocaleString()}</span></div>
                 `;
                 tip.classList.add('visible');
