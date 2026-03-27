@@ -59,12 +59,12 @@ POPULAR_TEAMS = {
 # Round importance weights
 ROUND_SCORES = {
     "Final": 100,
-    "Semi-final": 85,
-    "Quarter-final": 70,
-    "Round of 16": 55,
-    "Round of 32": 45,
-    "3rd Place": 40,
-    "Group": 30,
+    "Semi-final": 92,
+    "Quarter-final": 82,
+    "Round of 16": 70,
+    "Round of 32": 60,
+    "3rd Place": 55,
+    "Group": 50,
 }
 
 # FIFA Exchange fees

@@ -7,45 +7,20 @@ from config import (
 from db.database import get_all_matches, update_value_score
 
 
-def score_match(match: dict, breakdown: bool = False) -> int | dict:
-    """
-    Calculate value score (0-100) for a match.
+def _team_tier(team: str | None) -> int:
+    """Return tier number: 1=popular, 2=notable, 3=other, 0=TBD/unknown."""
+    if not team or team == "TBD":
+        return 0
+    if team in POPULAR_TEAMS["tier1"]:
+        return 1
+    if team in POPULAR_TEAMS["tier2"]:
+        return 2
+    return 3
 
-    When resale data is available the weights shift to include market signal:
-      - Round significance: 30% (was 40%)
-      - Venue desirability: 15% (was 25%)
-      - Team popularity: 15% (was 20%)
-      - Country: 10% (was 15%)
-      - Resale markup: 30% (new)
 
-    Without resale data the original weights apply.
-
-    If breakdown=True, returns a dict with total score and per-factor breakdown.
-    """
-    has_resale = bool(match.get("resale_median"))
-
-    # Dynamic weights
-    if has_resale:
-        w_round, w_venue, w_team, w_country, w_resale = 0.30, 0.15, 0.15, 0.10, 0.30
-    else:
-        w_round, w_venue, w_team, w_country, w_resale = 0.40, 0.25, 0.20, 0.15, 0.0
-
-    # Round significance
-    round_name = match.get("round", "Group")
-    round_raw = ROUND_SCORES.get(round_name, 30)
-    round_score = round_raw * w_round
-
-    # Venue desirability
-    venue = match.get("venue", "")
-    venue_raw = VENUE_SCORES.get(venue, 65)
-    venue_score = venue_raw * w_venue
-
-    # Team popularity
-    teams = {match.get("home_team", ""), match.get("away_team", "")}
-    teams.discard(None)
-    teams.discard("TBD")
+def _team_raw_and_detail(teams: set[str]) -> tuple[int, str]:
+    """Score based on the best individual team in the match."""
     team_raw = 0
-    team_detail = "Unknown"
     for team in teams:
         if team in POPULAR_TEAMS["tier1"]:
             team_raw = max(team_raw, 100)
@@ -55,27 +30,95 @@ def score_match(match: dict, breakdown: bool = False) -> int | dict:
             team_raw = max(team_raw, 40)
     if not teams:
         team_raw = 50
+
     if team_raw == 100:
-        team_detail = "Tier 1"
+        detail = "Tier 1"
     elif team_raw == 70:
-        team_detail = "Tier 2"
+        detail = "Tier 2"
     elif team_raw == 50:
-        team_detail = "TBD"
+        detail = "TBD"
     else:
-        team_detail = "Tier 3"
-    team_score = team_raw * w_team
+        detail = "Tier 3"
+    return team_raw, detail
 
-    # Country factor
-    country = match.get("country", "USA")
-    if country == "Mexico":
-        country_raw = 0
-    elif country == "Canada":
-        country_raw = 80
+
+_MATCHUP_TABLE = {
+    (1, 1): (100, "Tier 1 vs Tier 1"),
+    (1, 2): (85, "Tier 1 vs Tier 2"),
+    (1, 3): (65, "Tier 1 vs Other"),
+    (1, 0): (60, "Tier 1 vs TBD"),
+    (2, 2): (70, "Tier 2 vs Tier 2"),
+    (2, 3): (45, "Tier 2 vs Other"),
+    (2, 0): (40, "Tier 2 vs TBD"),
+    (3, 3): (25, "Other vs Other"),
+    (3, 0): (20, "Other vs TBD"),
+    (0, 0): (30, "TBD vs TBD"),
+}
+
+
+def _matchup_score(home: str | None, away: str | None) -> tuple[int, str]:
+    """Score based on which two teams are playing each other."""
+    tiers = sorted([_team_tier(home), _team_tier(away)])
+    return _MATCHUP_TABLE.get(tuple(tiers), (25, "Unknown"))
+
+
+def _resale_raw_score(markup_pct: float) -> float:
+    """Piecewise resale markup curve — generous for 50-200% range."""
+    if markup_pct <= 0:
+        return 5
+    elif markup_pct <= 100:
+        return 15 + markup_pct * 0.55       # 0%→15, 100%→70
+    elif markup_pct <= 300:
+        return 70 + (markup_pct - 100) * 0.125  # 100%→70, 300%→95
     else:
-        country_raw = 100
-    country_score = country_raw * w_country
+        return min(100, 95 + (markup_pct - 300) * 0.025)
 
-    # Resale markup factor — how much above face value the market is pricing
+
+def _deal_raw_score(markup_pct: float) -> float:
+    """Inverse piecewise deal curve — low markup = high score."""
+    if markup_pct <= 0:
+        return 100
+    elif markup_pct <= 100:
+        return 100 - markup_pct * 0.55       # 0%→100, 100%→45
+    elif markup_pct <= 200:
+        return 45 - (markup_pct - 100) * 0.35   # 100%→45, 200%→10
+    else:
+        return max(0, 10 - (markup_pct - 200) * 0.05)
+
+
+def score_match(match: dict, breakdown: bool = False) -> int | dict:
+    """
+    Calculate investment score (0-100) for a match.
+
+    With resale data:
+      Round 25% + Venue 10% + Team 10% + Matchup 15% + Resale 30% = 90%
+      +10 bonus for non-Mexico venues (flat), +0 for Mexico (resale cap)
+
+    Without resale data:
+      Round 35% + Venue 15% + Team 15% + Matchup 20% + Country 15% = 100%
+    """
+    has_resale = bool(match.get("resale_median"))
+    is_mexico = match.get("country") == "Mexico"
+
+    # Round
+    round_name = match.get("round", "Group")
+    round_raw = ROUND_SCORES.get(round_name, 50)
+
+    # Venue
+    venue = match.get("venue", "")
+    venue_raw = VENUE_SCORES.get(venue, 65)
+
+    # Team (best individual)
+    teams = {match.get("home_team", ""), match.get("away_team", "")}
+    teams.discard(None)
+    teams.discard("TBD")
+    team_raw, team_detail = _team_raw_and_detail(teams)
+
+    # Matchup (pairing quality)
+    matchup_raw, matchup_detail = _matchup_score(
+        match.get("home_team"), match.get("away_team"))
+
+    # Resale markup
     resale_raw = 0
     resale_detail = "No data"
     markup_pct = 0
@@ -83,26 +126,50 @@ def score_match(match: dict, breakdown: bool = False) -> int | dict:
         face = match.get("face_value_cat3") or 100
         median = match["resale_median"]
         markup_pct = ((median - face) / face) * 100 if face > 0 else 0
-        # Map markup % to 0-100 score: 0%=10, 100%=30, 300%=70, 500%+=100
-        resale_raw = min(100, max(0, 10 + markup_pct * 0.18))
+        resale_raw = _resale_raw_score(markup_pct)
         resale_detail = f"+{int(markup_pct)}%" if markup_pct >= 0 else f"{int(markup_pct)}%"
-    resale_score = resale_raw * w_resale
 
-    total = min(100, max(0, int(round_score + venue_score + team_score + country_score + resale_score)))
+    if has_resale:
+        w_round, w_venue, w_team, w_matchup, w_resale = 0.25, 0.10, 0.10, 0.15, 0.30
+        market_bonus = 0 if is_mexico else 10
+        total_raw = (round_raw * w_round + venue_raw * w_venue + team_raw * w_team
+                     + matchup_raw * w_matchup + resale_raw * w_resale + market_bonus)
+    else:
+        w_round, w_venue, w_team, w_matchup, w_country = 0.35, 0.15, 0.15, 0.20, 0.15
+        country = match.get("country", "USA")
+        if country == "Mexico":
+            country_raw = 0
+        elif country == "Canada":
+            country_raw = 80
+        else:
+            country_raw = 100
+        total_raw = (round_raw * w_round + venue_raw * w_venue + team_raw * w_team
+                     + matchup_raw * w_matchup + country_raw * w_country)
+
+    total = min(100, max(0, int(total_raw)))
 
     if not breakdown:
         return total
 
-    factors = [
-        {"name": "Round", "score": int(round_score), "max": int(w_round * 100), "detail": round_name},
-        {"name": "Venue", "score": int(venue_score), "max": int(w_venue * 100), "detail": venue or "Unknown"},
-        {"name": "Team", "score": int(team_score), "max": int(w_team * 100), "detail": team_detail},
-        {"name": "Country", "score": int(country_score), "max": int(w_country * 100), "detail": country},
-        {"name": "Resale", "score": int(resale_score), "max": int(w_resale * 100), "detail": resale_detail},
-    ]
-    # Remove resale factor if no resale data
-    if not has_resale:
-        factors = [f for f in factors if f["name"] != "Resale"]
+    # Build breakdown for tooltip
+    if has_resale:
+        factors = [
+            {"name": "Round", "score": int(round_raw * w_round), "max": int(w_round * 100), "detail": round_name},
+            {"name": "Venue", "score": int(venue_raw * w_venue), "max": int(w_venue * 100), "detail": venue or "Unknown"},
+            {"name": "Team", "score": int(team_raw * w_team), "max": int(w_team * 100), "detail": team_detail},
+            {"name": "Matchup", "score": int(matchup_raw * w_matchup), "max": int(w_matchup * 100), "detail": matchup_detail},
+            {"name": "Resale", "score": int(resale_raw * w_resale), "max": int(w_resale * 100), "detail": resale_detail},
+            {"name": "Market", "score": market_bonus, "max": 10,
+             "detail": "Resale capped" if is_mexico else "No cap"},
+        ]
+    else:
+        factors = [
+            {"name": "Round", "score": int(round_raw * w_round), "max": int(w_round * 100), "detail": round_name},
+            {"name": "Venue", "score": int(venue_raw * w_venue), "max": int(w_venue * 100), "detail": venue or "Unknown"},
+            {"name": "Team", "score": int(team_raw * w_team), "max": int(w_team * 100), "detail": team_detail},
+            {"name": "Matchup", "score": int(matchup_raw * w_matchup), "max": int(w_matchup * 100), "detail": matchup_detail},
+            {"name": "Country", "score": int(country_raw * w_country), "max": int(w_country * 100), "detail": country},
+        ]
 
     return {"total": total, "factors": factors}
 
@@ -111,53 +178,31 @@ def score_match_buyer(match: dict, breakdown: bool = False) -> int | dict:
     """
     Calculate buyer deal score (0-100) — high score means good deal (low markup).
 
-    Weights:
-      - Deal quality: 50% (low markup = high score, inverted from reseller score)
-      - Round significance: 20%
-      - Venue desirability: 10%
-      - Team popularity: 10%
-      - Country: 10%
+    Weights: Deal 45% + Round 15% + Matchup 15% + Venue 10% + Team 10% + Country 5%
     """
     has_resale = bool(match.get("resale_median"))
 
-    w_round, w_venue, w_team, w_country, w_deal = 0.20, 0.10, 0.10, 0.10, 0.50
+    w_deal, w_round, w_matchup, w_venue, w_team, w_country = 0.45, 0.15, 0.15, 0.10, 0.10, 0.05
 
-    # Round significance
+    # Round
     round_name = match.get("round", "Group")
-    round_raw = ROUND_SCORES.get(round_name, 30)
-    round_score = round_raw * w_round
+    round_raw = ROUND_SCORES.get(round_name, 50)
 
-    # Venue desirability
+    # Venue
     venue = match.get("venue", "")
     venue_raw = VENUE_SCORES.get(venue, 65)
-    venue_score = venue_raw * w_venue
 
-    # Team popularity
+    # Team
     teams = {match.get("home_team", ""), match.get("away_team", "")}
     teams.discard(None)
     teams.discard("TBD")
-    team_raw = 0
-    team_detail = "Unknown"
-    for team in teams:
-        if team in POPULAR_TEAMS["tier1"]:
-            team_raw = max(team_raw, 100)
-        elif team in POPULAR_TEAMS["tier2"]:
-            team_raw = max(team_raw, 70)
-        else:
-            team_raw = max(team_raw, 40)
-    if not teams:
-        team_raw = 50
-    if team_raw == 100:
-        team_detail = "Tier 1"
-    elif team_raw == 70:
-        team_detail = "Tier 2"
-    elif team_raw == 50:
-        team_detail = "TBD"
-    else:
-        team_detail = "Tier 3"
-    team_score = team_raw * w_team
+    team_raw, team_detail = _team_raw_and_detail(teams)
 
-    # Country factor
+    # Matchup
+    matchup_raw, matchup_detail = _matchup_score(
+        match.get("home_team"), match.get("away_team"))
+
+    # Country
     country = match.get("country", "USA")
     if country == "Mexico":
         country_raw = 0
@@ -165,31 +210,31 @@ def score_match_buyer(match: dict, breakdown: bool = False) -> int | dict:
         country_raw = 80
     else:
         country_raw = 100
-    country_score = country_raw * w_country
 
-    # Deal quality — low markup = high score (inverted from reseller)
+    # Deal quality — low markup = high score
     deal_raw = 50  # default when no resale data
     deal_detail = "No data"
     if has_resale:
         face = match.get("face_value_cat3") or 100
         median = match["resale_median"]
         markup_pct = ((median - face) / face) * 100 if face > 0 else 0
-        # 0% markup = 100 (best deal), 200%+ markup = 0 (bad deal)
-        deal_raw = max(0, min(100, 100 - markup_pct * 0.5))
+        deal_raw = _deal_raw_score(markup_pct)
         deal_detail = f"+{int(markup_pct)}%" if markup_pct >= 0 else f"{int(markup_pct)}%"
-    deal_score = deal_raw * w_deal
 
-    total = min(100, max(0, int(round_score + venue_score + team_score + country_score + deal_score)))
+    total_raw = (deal_raw * w_deal + round_raw * w_round + matchup_raw * w_matchup
+                 + venue_raw * w_venue + team_raw * w_team + country_raw * w_country)
+    total = min(100, max(0, int(total_raw)))
 
     if not breakdown:
         return total
 
     factors = [
-        {"name": "Deal", "score": int(deal_score), "max": int(w_deal * 100), "detail": deal_detail},
-        {"name": "Round", "score": int(round_score), "max": int(w_round * 100), "detail": round_name},
-        {"name": "Venue", "score": int(venue_score), "max": int(w_venue * 100), "detail": venue or "Unknown"},
-        {"name": "Team", "score": int(team_score), "max": int(w_team * 100), "detail": team_detail},
-        {"name": "Country", "score": int(country_score), "max": int(w_country * 100), "detail": country},
+        {"name": "Deal", "score": int(deal_raw * w_deal), "max": int(w_deal * 100), "detail": deal_detail},
+        {"name": "Round", "score": int(round_raw * w_round), "max": int(w_round * 100), "detail": round_name},
+        {"name": "Matchup", "score": int(matchup_raw * w_matchup), "max": int(w_matchup * 100), "detail": matchup_detail},
+        {"name": "Venue", "score": int(venue_raw * w_venue), "max": int(w_venue * 100), "detail": venue or "Unknown"},
+        {"name": "Team", "score": int(team_raw * w_team), "max": int(w_team * 100), "detail": team_detail},
+        {"name": "Country", "score": int(country_raw * w_country), "max": int(w_country * 100), "detail": country},
     ]
 
     return {"total": total, "factors": factors}
