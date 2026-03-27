@@ -356,6 +356,7 @@
             position: relative;
             width: 44px;
             height: 44px;
+            margin-bottom: 14px;
             flex-shrink: 0;
         }
         .score-ring-wrap svg {
@@ -381,6 +382,20 @@
             font-family: 'Outfit', sans-serif;
             font-weight: 700;
             font-size: 0.78rem;
+            pointer-events: none;
+        }
+
+        .score-ring-label {
+            position: absolute;
+            bottom: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Outfit', sans-serif;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
             pointer-events: none;
         }
 
@@ -1131,7 +1146,7 @@
         </div>
         <div class="stat-card">
             <div class="stat-value" id="statHighValue">--</div>
-            <div class="stat-label">High Value (65+)</div>
+            <div class="stat-label">Hot (75+)</div>
         </div>
         <div class="stat-card">
             <div class="stat-value" id="statAvgScore">--</div>
@@ -1277,6 +1292,8 @@
         Round: '#3b82f6',
         Venue: '#a855f7',
         Team: '#22c55e',
+        Matchup: '#ec4899',
+        Market: '#f97316',
         Country: '#f97316',
         Resale: '#f5c518',
     };
@@ -1285,10 +1302,11 @@
         const r = 18, c = 2 * Math.PI * r;
         const pct = Math.min(score, 100) / 100;
         const offset = c * (1 - pct);
-        let color;
-        if (score >= 65) color = '#4ade80';
-        else if (score >= 40) color = '#fbbf24';
-        else color = '#f87171';
+        let color, label;
+        if (score >= 75) { color = '#4ade80'; label = 'Hot'; }
+        else if (score >= 55) { color = '#fbbf24'; label = 'Solid'; }
+        else if (score >= 35) { color = '#94a3b8'; label = 'Fair'; }
+        else { color = '#f87171'; label = 'Cold'; }
 
         let tooltipHtml = '';
         if (breakdown && breakdown.length) {
@@ -1322,6 +1340,7 @@
                         stroke-dashoffset="${offset}"/>
                 </svg>
                 <div class="score-ring-text" style="color:${color}">${score}</div>
+                <div class="score-ring-label" style="color:${color}">${label}</div>
                 ${tooltipHtml}
             </div>`;
     }
@@ -1439,7 +1458,7 @@
                 <td class="price-cell${isBest(sh) ? ' price-best' : ''}">${fmtPrice(sh)}</td>
                 <td class="price-cell">${best ? fmtPrice(best) : '—'}</td>
                 <td>${mk !== null ? mk + '%' : '—'}</td>
-                <td class="score-cell" style="color:${score >= 65 ? '#4ade80' : score >= 40 ? '#fbbf24' : '#f87171'}">${score}</td>
+                <td class="score-cell" style="color:${score >= 75 ? '#4ade80' : score >= 55 ? '#fbbf24' : score >= 35 ? '#94a3b8' : '#f87171'}">${score}</td>
             </tr>`;
         }).join('');
 
@@ -1699,7 +1718,7 @@
     // ─── Stats ───
     function updateStats() {
         document.getElementById('statTotal').textContent = allMatches.length;
-        document.getElementById('statHighValue').textContent = allMatches.filter(m => getScore(m) >= 65).length;
+        document.getElementById('statHighValue').textContent = allMatches.filter(m => getScore(m) >= 75).length;
         const avg = allMatches.length ? Math.round(allMatches.reduce((s, m) => s + getScore(m), 0) / allMatches.length) : 0;
         document.getElementById('statAvgScore').textContent = avg;
     }
