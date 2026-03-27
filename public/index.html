@@ -1175,8 +1175,8 @@
                         <option value="Mexico">Mexico</option>
                     </select>
                     <label class="resale-toggle">
-                        <input type="checkbox" id="resaleOnly" onchange="filterMatches()">
-                        <span class="resale-toggle-label">Resale only</span>
+                        <input type="checkbox" id="resaleOnly" checked onchange="filterMatches()">
+                        <span class="resale-toggle-label">With prices only</span>
                     </label>
                 </div>
             </div>
@@ -1187,7 +1187,7 @@
                 <div class="skeleton-card"><div class="skeleton-bar"></div><div class="skeleton-body"><div class="skeleton-line w60"></div><div class="skeleton-line h24 w80"></div><div class="skeleton-line w40"></div></div></div>
                 <div class="skeleton-card"><div class="skeleton-bar"></div><div class="skeleton-body"><div class="skeleton-line w60"></div><div class="skeleton-line h24 w80"></div><div class="skeleton-line w40"></div></div></div>
             </div>
-            <div id="noMatches" class="empty-state">No matches found.</div>
+            <div id="noMatches" class="empty-state">No matches with listings found. <a href="#" onclick="event.preventDefault();document.getElementById('resaleOnly').checked=false;filterMatches();" style="color:var(--accent);">Show all matches</a></div>
         </div>
 
 
@@ -1627,7 +1627,7 @@
         }
         if (document.getElementById('resaleOnly').checked) {
             filtered = filtered.filter(m =>
-                (m.platform_prices && m.platform_prices.length > 0) || m.resale_lowest || m.resale_median
+                m.platform_prices && m.platform_prices.length > 0
             );
         }
 
@@ -1650,8 +1650,16 @@
         const grid = document.getElementById('matchGrid');
         const noMsg = document.getElementById('noMatches');
         // Update filter count display
-        document.getElementById('filterCount').textContent =
-            `Showing ${filtered.length} of ${totalCount} matches`;
+        const fc = document.getElementById('filterCount');
+        if (document.getElementById('resaleOnly').checked && filtered.length < totalCount) {
+            fc.innerHTML = `Showing ${filtered.length} of ${totalCount} matches · <a href="#" onclick="event.preventDefault();document.getElementById('resaleOnly').checked=false;filterMatches();" style="color:var(--accent);">Show all</a>`;
+        } else {
+            fc.textContent = `Showing ${filtered.length} of ${totalCount} matches`;
+        }
+        // Update mobile filter badge
+        const toggleBtn = document.getElementById('filterToggle');
+        const activeFilters = document.getElementById('resaleOnly').checked ? 1 : 0;
+        toggleBtn.textContent = activeFilters > 0 ? `Filters (${activeFilters})` : 'Filters';
         if (filtered.length === 0) {
             grid.innerHTML = '';
             grid.className = 'match-grid';
