@@ -2,8 +2,6 @@
 
 A real-time dashboard that tracks resale ticket prices across multiple platforms for all 104 FIFA World Cup 2026 matches. Compares prices, scores investment value, and tracks price trends to help find the best deals.
 
-**Live:** [ticket-reseller.vercel.app](https://ticket-reseller.vercel.app)
-
 ## What It Does
 
 - Tracks **104 matches** across all rounds (Group stage through Final)
